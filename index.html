@@ -15,43 +15,55 @@
         }
     </script>
     <style>
-        body { transition: background-color 0.3s, color 0.3s; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        body { transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
         input[type=range] { -webkit-appearance: none; width: 100%; height: 5px; border-radius: 5px; background: #e2e8f0; outline: none; }
         .dark input[type=range] { background: #334155; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid white; }
         .sim-slider::-webkit-slider-thumb { background: #6366f1 !important; }
-        .input-minimal { background: transparent; border-bottom: 1px solid transparent; width: 100%; padding: 4px 2px; text-align: center; outline: none; transition: all 0.2s; font-variant-numeric: tabular-nums; }
-        .input-minimal:focus { border-bottom-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .input-minimal { background: transparent; border-bottom: 1px solid transparent; width: 100%; padding: 4px 2px; text-align: center; outline: none; transition: all 0.2s; }
+        .input-minimal:focus { border-bottom-color: #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
         .hidden-content { display: none; }
-        .active-tab { background-color: #3b82f6 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .active-tab { background-color: #3b82f6 !important; color: white !important; }
         .magen-badge { white-space: nowrap; min-width: max-content; }
         .ai-pulse { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        @media (min-width: 1280px) {
+            .sticky-sidebar { position: sticky; top: 110px; max-height: calc(100vh - 130px); overflow-y: auto; padding-left: 4px; }
+        }
+
+        @media print {
+            .no-print, button, input[type=range], #subCalcModal, #aiAdvisorContent, #gradeChart, #filterContainer { display: none !important; }
+            body { background: white; color: black; }
+            .xl\:col-span-5 { display: none; }
+            .xl\:col-span-7 { width: 100%; grid-column: span 12; }
+            .card-transition { break-inside: avoid; border: 1px solid #eee !important; margin-bottom: 10px; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-dark-bg dark:text-dark-text min-h-screen p-4 md:p-8 font-sans">
     
     <div class="max-w-[1600px] mx-auto space-y-8">
         
-        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border-r-4 border-blue-600 flex flex-col xl:flex-row justify-between items-center gap-6 sticky top-0 z-50 bg-opacity-95 backdrop-blur-md">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border-r-4 border-blue-600 flex flex-col xl:flex-row justify-between items-center gap-6 sticky top-0 z-50 bg-opacity-95 backdrop-blur-md no-print">
             <div class="flex items-center gap-4 w-full xl:w-auto">
-                <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-blue-600"><i class="fas fa-calculator text-2xl"></i></div>
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-blue-600 no-print"><i class="fas fa-calculator text-2xl"></i></div>
                 <div>
                     <h1 class="text-3xl font-black tracking-tight">מחשבון ציונים</h1>
-                    <button id="resetSimBtn" onclick="resetAllSimulations()" class="hidden text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:underline">נקה סימולציה <i class="fas fa-undo ml-1"></i></button>
+                    <button id="resetSimBtn" onclick="resetAllSimulations()" class="hidden text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:underline no-print">נקה סימולציה <i class="fas fa-undo ml-1"></i></button>
                 </div>
             </div>
 
-            <div class="flex flex-col md:flex-row gap-4 items-center bg-indigo-50 dark:bg-slate-700/50 p-3 rounded-xl border border-indigo-100 dark:border-slate-600 w-full xl:w-auto">
+            <div class="flex flex-col md:flex-row gap-4 items-center bg-indigo-50 dark:bg-slate-700/50 p-3 rounded-xl border border-indigo-100 dark:border-slate-600 w-full xl:w-auto no-print">
                 <div class="flex items-center gap-3">
                     <div class="text-right">
                         <span class="text-[10px] font-bold text-indigo-500 uppercase block">יעד ממוצע</span>
-                        <input type="number" id="targetInput" placeholder="85" oninput="calculateTarget()" class="w-16 bg-white dark:bg-slate-800 border border-indigo-200 rounded px-1 text-center font-bold text-indigo-700 outline-none">
+                        <input type="number" id="targetInput" placeholder="85" min="0" max="100" oninput="enforceMax(this); calculateAll()" class="w-16 bg-white dark:bg-slate-800 border border-indigo-200 rounded px-1 text-center font-bold text-indigo-700 outline-none">
                     </div>
                     <div class="h-8 w-px bg-indigo-200"></div>
                     <div>
@@ -62,7 +74,7 @@
             </div>
             
             <div class="flex items-center gap-6">
-                <button onclick="toggleTheme()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button>
+                <button onclick="toggleTheme()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition no-print"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button>
                 <div class="text-right">
                     <div class="text-xs text-slate-400 font-bold uppercase">ממוצע כולל</div>
                     <div id="totalAverage" class="text-5xl font-black text-blue-600 leading-none">00.00</div>
@@ -71,84 +83,75 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
             <div class="xl:col-span-7 space-y-8">
                 <div id="semesterWrapper" class="space-y-6"></div>
-                <button onclick="startNewSemester()" class="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 transition flex items-center justify-center gap-2"><i class="fas fa-plus"></i> סמסטר חדש</button>
+                <button onclick="startNewSemester()" class="w-full py-5 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl text-slate-500 font-bold hover:bg-white hover:border-blue-400 hover:text-blue-500 transition-all flex items-center justify-center gap-2 no-print"><i class="fas fa-plus-circle text-xl"></i> פתח סמסטר חדש</button>
             </div>
 
-            <div class="xl:col-span-5 space-y-6 sticky top-28">
-                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-border">
-                    <div class="flex flex-col gap-4 mb-4">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm flex items-center"><i class="fas fa-chart-pie text-purple-500 ml-2"></i>ניתוח נתונים</h3>
-                            <div class="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1 gap-1">
-                                <button onclick="setChartType('bar')" id="btn-bar" class="text-xs px-3 py-1 rounded-md transition active-tab"><i class="fas fa-chart-bar"></i></button>
-                                <button onclick="setChartType('line')" id="btn-line" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700"><i class="fas fa-chart-line"></i></button>
-                                <button onclick="setChartType('ai')" id="btn-ai" class="text-xs px-3 py-1 rounded-md transition hover:bg-white text-purple-500 font-bold"><i class="fas fa-robot"></i></button>
-                            </div>
-                        </div>
-                        <div id="filterContainer">
-                            <select id="scopeFilter" onchange="calculateAll()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-xs rounded-lg p-2 outline-none">
-                                <option value="all">כל התואר</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="h-72 relative">
-                        <canvas id="gradeChart"></canvas>
-                        <div id="aiAdvisorContent" class="absolute inset-0 hidden overflow-y-auto bg-slate-50 dark:bg-slate-900 rounded-xl p-4 space-y-4">
-                            <div class="flex items-start gap-3">
-                                <div class="bg-purple-600 text-white p-2 rounded-lg ai-pulse"><i class="fas fa-brain"></i></div>
-                                <div class="flex-1">
-                                    <p class="text-sm font-bold text-purple-600 mb-1">מה עדיף לי לגשת?</p>
-                                    <div id="aiTextOutput" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></div>
+            <div class="xl:col-span-5">
+                <div class="sticky-sidebar space-y-6">
+                    <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-border">
+                        <div class="flex flex-col gap-4 mb-4">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm flex items-center"><i class="fas fa-chart-pie text-purple-500 ml-2"></i>מרכז ניתוח</h3>
+                                <div class="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1 gap-1 no-print">
+                                    <button onclick="setChartType('bar')" id="btn-bar" class="text-xs px-3 py-1 rounded-md transition active-tab"><i class="fas fa-chart-bar"></i></button>
+                                    <button onclick="setChartType('line')" id="btn-line" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700"><i class="fas fa-chart-line"></i></button>
+                                    <button onclick="setChartType('ai')" id="btn-ai" class="text-xs px-3 py-1 rounded-md transition hover:bg-white text-purple-500 font-bold"><i class="fas fa-robot"></i></button>
                                 </div>
                             </div>
-                            <div id="retakeList" class="space-y-2"></div>
+                            <div id="filterContainer" class="no-print">
+                                <select id="scopeFilter" onchange="calculateAll()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-xs rounded-lg p-2 outline-none">
+                                    <option value="all">כל התואר</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="h-64 relative">
+                            <canvas id="gradeChart"></canvas>
+                            <div id="aiAdvisorContent" class="absolute inset-0 hidden overflow-y-auto bg-slate-50 dark:bg-slate-900 rounded-xl p-4 space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="bg-purple-600 text-white p-2 rounded-lg ai-pulse"><i class="fas fa-brain"></i></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-purple-600 mb-1">מה הכי כדאי לי לשפר</p>
+                                        <div id="aiTextOutput" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></div>
+                                    </div>
+                                </div>
+                                <div id="retakeList" class="space-y-2"></div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-slate-200 dark:border-dark-border overflow-hidden flex flex-col max-h-[50vh]">
-                    <div class="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                        <h2 class="font-bold text-slate-700 dark:text-slate-200 text-sm">עריכת נתונים</h2>
-                        <div class="flex gap-2">
-                            <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(this)">
-                            <button onclick="exportData()" class="text-slate-400 hover:text-blue-500 text-xs"><i class="fas fa-download"></i></button>
-                            <button onclick="triggerImport()" class="text-slate-400 hover:text-blue-500 text-xs"><i class="fas fa-upload"></i></button>
-                            <button onclick="resetDefaults()" class="text-slate-400 hover:text-red-500 text-xs"><i class="fas fa-trash-alt"></i></button>
+                    <div class="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-slate-200 dark:border-dark-border overflow-hidden flex flex-col no-print">
+                        <div class="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 flex justify-between items-center">
+                            <h2 class="font-bold text-slate-700 dark:text-slate-200 text-sm">עריכת נתונים</h2>
+                            <div class="flex gap-2">
+                                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(this)">
+                                <button onclick="exportData()" title="גיבוי"><i class="fas fa-download text-slate-400"></i></button>
+                                <button onclick="triggerImport()" title="טעינה"><i class="fas fa-upload text-slate-400"></i></button>
+                                <button onclick="resetDefaults()" title="איפוס"><i class="fas fa-trash-alt text-slate-400 hover:text-red-500"></i></button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="overflow-auto custom-scrollbar p-1">
-                        <table class="w-full text-[11px] border-collapse">
-                            <thead class="text-[9px] text-slate-400 uppercase sticky top-0 bg-white dark:bg-dark-card z-10">
-                                <tr><th class="p-2 text-right">קורס</th><th class="p-1">בינארי</th><th class="p-1">סמ'</th><th class="p-1">נק"ז</th><th class="p-1 text-blue-500">עב'</th><th class="p-1 text-blue-500">בחן</th><th class="p-1 text-orange-500">%ע</th><th class="p-1 text-orange-500">%ב</th><th class="p-1"></th></tr>
-                            </thead>
-                            <tbody id="settingsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
-                        </table>
-                    </div>
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800">
-                        <button onclick="addNewCourse()" class="w-full py-2 bg-white dark:bg-slate-700 border border-slate-200 text-blue-600 font-bold rounded-xl text-xs"><i class="fas fa-plus"></i> הוסף קורס</button>
+                        <div class="overflow-x-auto p-1">
+                            <table class="w-full text-[11px] border-collapse">
+                                <thead class="text-[9px] text-slate-400 uppercase sticky top-0 bg-white dark:bg-dark-card z-10">
+                                    <tr><th class="p-2 text-right">קורס</th><th class="p-1">בינארי</th><th class="p-1">סמ'</th><th class="p-1">נק"ז</th><th class="p-1">עב'</th><th class="p-1">בחן</th><th class="p-1 text-orange-500">%ע</th><th class="p-1 text-orange-500">%ב</th><th class="p-1"></th></tr>
+                                </thead>
+                                <tbody id="settingsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800 border-t">
+                            <button onclick="addNewCourse()" class="w-full py-2 bg-white dark:bg-slate-700 border border-slate-200 text-blue-600 font-bold rounded-xl text-xs hover:bg-blue-50 transition-colors"><i class="fas fa-plus"></i> הוסף קורס</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="subCalcModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4">
-        <div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-pop">
-            <div class="p-4 bg-blue-600 text-white flex justify-between items-center"><h3 class="font-bold flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון משנה</h3><button onclick="closeSubCalc()" class="text-white hover:text-slate-200"><i class="fas fa-times"></i></button></div>
-            <div class="p-4 space-y-3 max-h-[50vh] overflow-y-auto" id="modalRows"></div>
-            <div class="p-4 bg-slate-50 dark:bg-slate-800 space-y-3">
-                <div class="flex justify-between text-xs font-bold"><span class="text-slate-500">משקל בקורס:</span><span id="modalTotalWeight" class="text-orange-500">0%</span></div>
-                <div class="flex justify-between text-lg font-black"><span class="text-slate-700 dark:text-slate-200">ציון משוקלל:</span><span id="modalFinalGrade" class="text-blue-600">0</span></div>
-                <div class="grid grid-cols-2 gap-3"><button onclick="addSubCalcRow()" class="py-2 border border-blue-600 text-blue-600 rounded-xl font-bold text-xs">הוסף מטלה</button><button onclick="applySubCalc()" class="py-2 bg-blue-600 text-white rounded-xl font-bold text-xs">עדכן</button></div>
-            </div>
-        </div>
-    </div>
+    <div id="subCalcModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4"><div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-pop"><div class="p-4 bg-blue-600 text-white flex justify-between items-center"><h3 class="font-bold flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון <span id="modalTitleSuffix"></span></h3><button onclick="closeSubCalc()" class="text-white"><i class="fas fa-times"></i></button></div><div class="p-4 space-y-3 max-h-[50vh] overflow-y-auto" id="modalRows"></div><div class="p-4 bg-slate-50 dark:bg-slate-800 space-y-3 border-t"><div class="flex justify-between text-xs font-bold"><span>משקל בקורס:</span><span id="modalTotalWeight" class="text-orange-500">0%</span></div><div class="flex justify-between text-lg font-black"><span>ציון משוקלל:</span><span id="modalFinalGrade" class="text-blue-600">0</span></div><div class="grid grid-cols-2 gap-3 mt-4"><button onclick="addSubCalcRow()" class="py-2 border border-blue-600 text-blue-600 rounded-xl font-bold text-xs">הוסף מטלה</button><button onclick="applySubCalc()" class="py-2 bg-blue-600 text-white rounded-xl font-bold text-xs">עדכן נתונים</button></div></div></div></div>
 
     <script>
-        // --- Core Data ---
         const defaultData = [
             { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 10, quiz: 15 }, exam: 60, workMagen: false, quizMagen: true, isBinary: false, simExam: null },
             { id: 'discrete', name: 'דיסקרטית', semester: 1, credits: 3, work: 100, quiz: 78, weights: { work: 8, quiz: 7 }, exam: 60, workMagen: true, quizMagen: false, isBinary: false, simExam: null },
@@ -158,7 +161,6 @@
         ];
         let courses = JSON.parse(localStorage.getItem('harelGradesV11_2')) || JSON.parse(JSON.stringify(defaultData));
         courses.forEach(c => { if(c.simExam === undefined) c.simExam = null; });
-
         let collapsedSemesters = {}; let chart = null; let currentChartType = 'bar'; let activeCalcContext = null;
 
         function init() {
@@ -168,129 +170,184 @@
             updateFilterOptions(); renderAll(); calculateAll();
         }
 
-        // --- Core Calc Logic ---
         function calculateCourseFinal(c, useSim = true) {
             if (c.isBinary) return "עובר"; 
             let wp = parseFloat(c.weights.work) || 0, qp = parseFloat(c.weights.quiz) || 0;
             const w = parseFloat(c.work) || 0, q = parseFloat(c.quiz) || 0;
             const ex = (useSim && c.simExam !== null) ? parseFloat(c.simExam) : parseFloat(c.exam) || 0;
-            if (c.workMagen && w < ex) wp = 0;
-            if (c.quizMagen && q < ex) qp = 0;
-            return (((w * wp) + (q * qp) + (ex * (100 - wp - qp))) / 100).toFixed(2);
+            let ew = Math.max(0, 100 - wp - qp);
+            if (c.workMagen && w < ex) wp = 0; if (c.quizMagen && q < ex) qp = 0;
+            let tw = wp + qp + ew; if (tw === 0) return ex.toFixed(2);
+            return (((w * wp) + (q * qp) + (ex * ew)) / tw).toFixed(2);
         }
 
         function calculateAll() {
-            let twSim = 0, tgc = 0, tca = 0, semStats = {};
-            let labels = [], data = [], colors = [], distro = { '90+': 0, '80-89': 0, '70-79': 0, '60-69': 0, '0-59': 0 };
-            let isSimActive = false;
-
+            let twS=0, tgc=0, tca=0, semStats={}, labels=[], data=[], colors=[], isS=false;
             courses.forEach(c => {
                 const cr = parseFloat(c.credits) || 0; tca += cr;
-                if (!semStats[c.semester]) semStats[c.semester] = { sum: 0, creds: 0 };
+                if (!semStats[c.semester]) semStats[c.semester] = { sum: 0, cr: 0 };
                 if (c.isBinary) return; 
-                const finalSim = parseFloat(calculateCourseFinal(c, true));
-                if(c.simExam !== null) isSimActive = true;
-                twSim += finalSim * cr; tgc += cr;
-                semStats[c.semester].sum += finalSim * cr; semStats[c.semester].creds += cr;
-
-                if (shouldShowInChart(c)) {
-                    labels.push(c.name); data.push(finalSim); colors.push(getBarColor(finalSim));
-                    if (finalSim >= 90) distro['90+']++; else if (finalSim >= 80) distro['80-89']++; else if (finalSim >= 70) distro['70-79']++; else if (finalSim >= 60) distro['60-69']++; else distro['0-59']++;
-                }
+                const fS = parseFloat(calculateCourseFinal(c, true));
+                if(c.simExam !== null) isS = true; twS += fS * cr; tgc += cr;
+                semStats[c.semester].sum += fS * cr; semStats[c.semester].cr += cr;
+                if (shouldShowInChart(c)) { labels.push(c.name); data.push(fS); colors.push(getBarColor(fS)); }
             });
-
-            document.getElementById('totalAverage').innerText = tgc > 0 ? (twSim / tgc).toFixed(2) : "0.00";
+            document.getElementById('totalAverage').innerText = tgc > 0 ? (twS / tgc).toFixed(2) : "0.00";
             document.getElementById('totalCredits').innerText = tca;
-            document.getElementById('resetSimBtn').classList.toggle('hidden', !isSimActive);
-            for (const [s, st] of Object.entries(semStats)) {
-                const el = document.getElementById(`semAvg_${s}`); if (el) el.innerText = st.creds > 0 ? (st.sum / st.creds).toFixed(2) : "0.00";
-            }
+            document.getElementById('resetSimBtn').classList.toggle('hidden', !isS);
+            for (const [s, st] of Object.entries(semStats)) { const el = document.getElementById(`semAvg_${s}`); if (el) el.innerText = st.cr > 0 ? (st.sum / st.cr).toFixed(2) : "0.00"; }
             calculateTarget();
-            if (currentChartType === 'ai') updateAIAdvisor(); else updateChart(labels, data, colors, tgc > 0 ? (twSim / tgc).toFixed(2) : 0, semStats, distro);
+            if (currentChartType === 'ai') updateAIAdvisor(); else updateChart(labels, data, colors, semStats);
         }
 
-        // --- AI Advisor (ROI Analysis) ---
+        // --- Fast UI Update (The "Slider" Fix) ---
+        function updateExamLive(i, val) { 
+            courses[i].exam = Math.min(100, Math.max(0, parseFloat(val)||0));
+            document.getElementById(`examLabel_${i}`).innerText = courses[i].exam;
+            const fS = calculateCourseFinal(courses[i], true);
+            const fe = document.getElementById(`final_${i}`); if(fe) { fe.innerText = fS; fe.className = `text-3xl font-black ${finalColor(fS)}`; }
+            updateMagenBadges(i); calculateAll(); saveData();
+        }
+
+        function updateSimLive(i, val) {
+            courses[i].simExam = val === "" ? null : Math.min(100, Math.max(0, parseFloat(val)));
+            document.getElementById(`simVal_${i}`).innerText = courses[i].simExam !== null ? courses[i].simExam : '--';
+            const fS = calculateCourseFinal(courses[i], true), fR = calculateCourseFinal(courses[i], false);
+            const fe = document.getElementById(`final_${i}`); if(fe) { fe.innerText = fS; fe.className = `text-3xl font-black ${finalColor(fS)}`; }
+            const diff = (parseFloat(fS) - parseFloat(fR)).toFixed(1);
+            document.getElementById(`simDiff_${i}`).innerHTML = courses[i].simExam !== null ? `<span class="text-[10px] ${diff>=0?'text-green-500':'text-red-400'} font-bold">${diff>=0?'+':''}${diff}</span>` : '';
+            updateMagenBadges(i); calculateAll();
+        }
+
+        function updateData(i, f, v, sf = null, el = null) {
+            let val = v;
+            if(['work','quiz','exam','credits'].includes(f) || (f==='weights'&&sf)) {
+                val = Math.min(100, Math.max(0, parseFloat(v)||0));
+                if (f==='weights') {
+                    let other = sf==='work'?'quiz':'work';
+                    if (val + courses[i].weights[other] > 100) courses[i].weights[other] = 100 - val;
+                }
+                if(el) el.value = val;
+            }
+            if (f==='isBinary') courses[i].isBinary = !courses[i].isBinary; 
+            else if (f==='weights'&&sf) courses[i].weights[sf] = val;
+            else if (f==='name') courses[i].name = val;
+            else courses[i][f] = (f==='semester') ? parseInt(val)||1 : val;
+            saveData(); if (f==='semester') updateFilterOptions();
+            renderAll(); calculateAll(); 
+        }
+
+        // --- Chart & Performance Logic ---
+        function updateChart(labels, data, colors, semStats) {
+            const ctx = document.getElementById('gradeChart').getContext('2d');
+            const isD = document.documentElement.classList.contains('dark');
+            const chartData = currentChartType === 'bar' ? data : Object.keys(semStats).sort().map(s => semStats[s].cr > 0 ? (semStats[s].sum/semStats[s].cr).toFixed(2) : 0);
+            const chartLabels = currentChartType === 'bar' ? labels : Object.keys(semStats).sort().map(s => `סמ' ${s}`);
+
+            if (chart) {
+                chart.data.labels = chartLabels;
+                chart.data.datasets[0].data = chartData;
+                chart.data.datasets[0].backgroundColor = currentChartType === 'bar' ? colors : 'rgba(59, 130, 246, 0.1)';
+                chart.update('none'); 
+            } else {
+                chart = new Chart(ctx, {
+                    type: currentChartType === 'bar' ? 'bar' : 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{ data: chartData, backgroundColor: colors, borderColor: '#3b82f6', tension: 0.4, fill: true }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 }, x: { ticks: { font: { size: 9 } } } } }
+                });
+            }
+        }
+
+        // --- AI Advisor with Impact Logic ---
         function updateAIAdvisor() {
             const out = document.getElementById('aiTextOutput'), list = document.getElementById('retakeList'), totalCr = courses.reduce((s, c) => s + (c.isBinary ? 0 : parseFloat(c.credits) || 0), 0);
             if (totalCr === 0) { out.innerText = "הזן ציונים כדי לקבל המלצות."; return; }
+            
             let insights = courses.filter(c => !c.isBinary).map(c => {
                 const cur = parseFloat(calculateCourseFinal(c, true));
                 const weight = (parseFloat(c.credits) || 0) / totalCr;
-                return { name: c.name, gain: (100 - cur) * weight, weight, isSim: c.simExam !== null };
+                const impact10pts = (10 * weight).toFixed(2);
+                return { name: c.name, gain: (100 - cur) * weight, weight, impact10pts, isSim: c.simExam !== null };
             });
             insights.sort((a, b) => b.gain - a.gain);
-            out.innerHTML = `הנה הקורסים ששיפור בהם ייתן לך את המקסימום לממוצע ${insights.some(i=>i.isSim)?'(לפי הסימולציה)':''}:`;
+            
+            out.innerHTML = `ניתחתי את הנתונים שלך. הנה המבחנים הכי רווחיים לממוצע הכללי:`;
             list.innerHTML = '';
             insights.slice(0, 3).forEach((ins, i) => {
                 if (ins.gain <= 0.01) return;
                 const cols = ['purple', 'blue', 'indigo'];
-                list.innerHTML += `<div class="bg-white dark:bg-slate-800 p-2 rounded border-r-4 border-${cols[i]}-500 shadow-sm"><div class="flex justify-between font-bold text-[10px]"><span>${ins.name} ${ins.isSim?'(סימולציה)':''}</span><span class="text-green-500">+${ins.gain.toFixed(2)} לממוצע</span></div><p class="text-[9px] text-slate-400">כל 10 נקודות שתשפר פה שוות ${(ins.weight*10).toFixed(2)} לממוצע הכללי.</p></div>`;
+                list.innerHTML += `<div class="bg-white dark:bg-slate-800 p-2 rounded border-r-4 border-${cols[i]}-500 shadow-sm"><div class="flex justify-between font-bold text-[10px]"><span>${ins.name}</span><span class="text-green-500">+${ins.gain.toFixed(2)} לממוצע</span></div><p class="text-[9px] text-slate-400">כל 10 נקודות שתשפר פה שוות <b>${ins.impact10pts}</b> בממוצע הכללי.</p></div>`;
             });
         }
 
-        // --- UI Interactions ---
-        function updateSim(i, val) {
-            courses[i].simExam = val === "" ? null : parseFloat(val);
-            const fin = calculateCourseFinal(courses[i], true), real = calculateCourseFinal(courses[i], false);
-            document.getElementById(`simVal_${i}`).innerText = val || '--';
-            const fe = document.getElementById(`final_${i}`); if(fe){ fe.innerText = fin; fe.className = `text-3xl font-black ${finalColor(fin)}`; }
-            const diff = (parseFloat(fin) - parseFloat(real)).toFixed(1);
-            document.getElementById(`simDiff_${i}`).innerHTML = courses[i].simExam !== null ? `<span class="text-[10px] ${diff>=0?'text-green-500':'text-red-400'} font-bold">${diff>=0?'+':''}${diff}</span>` : '';
-            calculateAll();
+        // --- Modal & Work Calculator Fix ---
+        function openSubCalc(i, t) {
+            activeCalcContext = { index: i, type: t };
+            document.getElementById('modalTitleSuffix').innerText = t === 'work' ? 'עבודות' : 'בחנים';
+            document.getElementById('modalRows').innerHTML = ''; 
+            addSubCalcRow(); addSubCalcRow();
+            document.getElementById('subCalcModal').classList.remove('hidden');
+            updateModalResults();
         }
-        function resetAllSimulations() { courses.forEach(c => c.simExam = null); renderAll(); calculateAll(); }
-        function updateData(i, f, v, sf = null) {
-            const of = parseFloat(calculateCourseFinal(courses[i], false));
-            if (f === 'isBinary') courses[i].isBinary = !courses[i].isBinary; 
-            else if (f === 'weights' && sf) courses[i].weights[sf] = parseFloat(v) || 0;
-            else if (f === 'name') courses[i].name = v;
-            else courses[i][f] = (f === 'semester') ? parseInt(v)||1 : parseFloat(v)||0;
-            saveData(); if (f === 'semester') updateFilterOptions();
-            const nf = parseFloat(calculateCourseFinal(courses[i], false));
-            if (nf >= 100 && of < 100) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            if (['semester', 'name', 'credits', 'isBinary'].includes(f)) renderAll(); else refreshSingleCard(i);
-            calculateAll();
+        function closeSubCalc() { document.getElementById('subCalcModal').classList.add('hidden'); activeCalcContext = null; }
+        function addSubCalcRow() {
+            const d = document.createElement('div'); d.className = "grid grid-cols-12 gap-2 items-center subcalc-row";
+            d.innerHTML = `<div class="col-span-7"><input type="number" placeholder="ציון" min="0" max="100" oninput="updateModalResults()" class="sub-grade w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-4"><input type="number" placeholder="% משקל" min="0" max="100" oninput="updateModalResults()" class="sub-weight w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-1 text-center"><button onclick="this.parentElement.parentElement.remove(); updateModalResults();" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button></div>`;
+            document.getElementById('modalRows').appendChild(d);
         }
-        function toggleMagen(i, t) { if (t === 'work') courses[i].workMagen = !courses[i].workMagen; else courses[i].quizMagen = !courses[i].quizMagen; saveData(); calculateAll(); renderAll(); }
-        function setChartType(t) { currentChartType = t; ['bar', 'line', 'ai'].forEach(id => { const b = document.getElementById(`btn-${id}`); b.classList.toggle('active-tab', id === t); if(id!==t) b.classList.add('hover:bg-white', 'dark:hover:bg-slate-700'); else b.classList.remove('hover:bg-white', 'dark:hover:bg-slate-700'); }); document.getElementById('gradeChart').style.display = t === 'ai' ? 'none' : 'block'; document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai'); document.getElementById('filterContainer').style.visibility = t === 'ai' ? 'hidden' : 'visible'; if (chart) { chart.destroy(); chart = null; } calculateAll(); }
-        function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); calculateAll(); }
-
-        // --- Chart Engine ---
-        function updateChart(labels, data, colors, avg, semStats, distro) {
-            const ctx = document.getElementById('gradeChart').getContext('2d'), isD = document.documentElement.classList.contains('dark'), txt = isD ? '#cbd5e1' : '#64748b', grd = isD ? '#334155' : '#f1f5f9';
-            if (chart && chart.config.type !== (currentChartType === 'bar' ? 'bar' : 'line')) { chart.destroy(); chart = null; }
-            if (currentChartType === 'bar') {
-                if (!chart) chart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'ציון', data, backgroundColor: colors, borderRadius: 4, order: 2 }, { label: 'ממוצע', data: new Array(data.length).fill(parseFloat(avg)), borderColor: '#a855f7', borderWidth: 2, borderDash: [5,5], pointRadius: 0, type: 'line', order: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, grid: { color: grd }, ticks: { color: txt } }, x: { ticks: { color: txt, maxRotation: 45, font: { size: 9 } } } }, plugins: { legend: { display: false } } } });
-                else { chart.data.labels = labels; chart.data.datasets[0].data = data; chart.data.datasets[0].backgroundColor = colors; chart.data.datasets[1].data = new Array(data.length).fill(parseFloat(avg)); chart.update('none'); }
-            } else if (currentChartType === 'line') {
-                const sl = Object.keys(semStats).sort((a,b)=>a-b).map(s => `סמ' ${s}`), sd = Object.keys(semStats).sort((a,b)=>a-b).map(s => (semStats[s].creds>0 ? semStats[s].sum/semStats[s].creds : 0).toFixed(2));
-                if (!chart) chart = new Chart(ctx, { type: 'line', data: { labels: sl, datasets: [{ label: 'ממוצע', data: sd, borderColor: '#3b82f6', tension: 0.4, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, ticks: { color: txt } }, x: { ticks: { color: txt } } }, plugins: { legend: { display: false } } } });
-                else { chart.data.labels = sl; chart.data.datasets[0].data = sd; chart.update('none'); }
+        function updateModalResults() {
+            let tw = 0, ws = 0; 
+            document.querySelectorAll('.subcalc-row').forEach(r => { 
+                let gIn = r.querySelector('.sub-grade'), wIn = r.querySelector('.sub-weight');
+                if (parseFloat(gIn.value) > 100) gIn.value = 100;
+                if (parseFloat(wIn.value) > 100) wIn.value = 100;
+                let g = parseFloat(gIn.value)||0, w = parseFloat(wIn.value)||0;
+                if(w>0){tw+=w; ws+=(g*w);}
+            });
+            document.getElementById('modalTotalWeight').innerText = tw.toFixed(1) + '%';
+            document.getElementById('modalFinalGrade').innerText = tw > 0 ? (ws/tw).toFixed(2) : "0";
+        }
+        function applySubCalc() {
+            if (!activeCalcContext) return;
+            let tw = 0, ws = 0;
+            document.querySelectorAll('.subcalc-row').forEach(r => {
+                let g = parseFloat(r.querySelector('.sub-grade').value)||0;
+                let w = parseFloat(r.querySelector('.sub-weight').value)||0;
+                if(w>0){tw+=w; ws+=(g*w);}
+            });
+            const { index, type } = activeCalcContext;
+            const newWeight = Math.min(100, tw);
+            if (type === 'work') {
+                courses[index].work = (ws/tw)||0; courses[index].weights.work = newWeight;
+                if (newWeight + courses[index].weights.quiz > 100) courses[index].weights.quiz = 100 - newWeight;
+            } else {
+                courses[index].quiz = (ws/tw)||0; courses[index].weights.quiz = newWeight;
+                if (newWeight + courses[index].weights.work > 100) courses[index].weights.work = 100 - newWeight;
             }
+            saveData(); renderAll(); calculateAll(); closeSubCalc();
         }
 
-        // --- Sub-Calc Modal ---
-        function openSubCalc(i, t) { activeCalcContext = { index: i, type: t }; document.getElementById('modalTitle').innerText = `${courses[i].name} (${t === 'work' ? 'עבודות' : 'בחנים'})`; document.getElementById('modalRows').innerHTML = ''; addSubCalcRow(); addSubCalcRow(); document.getElementById('subCalcModal').classList.remove('hidden'); updateModalResults(); }
-        function closeSubCalc() { document.getElementById('subCalcModal').classList.add('hidden'); }
-        function addSubCalcRow() { const d = document.createElement('div'); d.className = "grid grid-cols-12 gap-2 items-center mb-2 subcalc-row"; d.innerHTML = `<div class="col-span-7"><input type="number" placeholder="ציון" oninput="updateModalResults()" class="sub-grade w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-4"><input type="number" placeholder="% משקל" oninput="updateModalResults()" class="sub-weight w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-1 text-center"><button onclick="this.parentElement.parentElement.remove(); updateModalResults();" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button></div>`; document.getElementById('modalRows').appendChild(d); }
-        function updateModalResults() { let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { const g = parseFloat(r.querySelector('.sub-grade').value)||0, w = parseFloat(r.querySelector('.sub-weight').value)||0; if(w>0){tw+=w; ws+=(g*w);} }); document.getElementById('modalTotalWeight').innerText = tw.toFixed(1) + '%'; document.getElementById('modalFinalGrade').innerText = tw > 0 ? (ws/tw).toFixed(2) : "0"; }
-        function applySubCalc() { if (!activeCalcContext) return; let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { const g = parseFloat(r.querySelector('.sub-grade').value)||0, w = parseFloat(r.querySelector('.sub-weight').value)||0; if(w>0){tw+=w; ws+=(g*w);} }); const { index, type } = activeCalcContext; if (type === 'work') { courses[index].work = (ws/tw)||0; courses[index].weights.work = tw; } else { courses[index].quiz = (ws/tw)||0; courses[index].weights.quiz = tw; } saveData(); renderAll(); calculateAll(); closeSubCalc(); }
-
-        // --- Helpers & Storage ---
-        function getBarColor(g) { const n = parseFloat(g); return n >= 90 ? '#10b981' : (n >= 80 ? '#3b82f6' : (n >= 60 ? '#eab308' : '#ef4444')); }
-        function finalColor(g) { const n = parseFloat(g); return n >= 90 ? 'text-emerald-500' : (n >= 80 ? 'text-blue-600' : (n >= 60 ? 'text-yellow-500' : 'text-red-500')); }
+        // --- Helpers ---
+        function updateMagenBadges(i) { const c=courses[i], el=document.getElementById(`magenBox_${i}`); if(!el)return; const ex=c.simExam!==null?c.simExam:c.exam; let h=''; if(c.workMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.work)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">עב' ${parseFloat(c.work)<parseFloat(ex)?'🛡️':'✅'}</span>`; if(c.quizMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.quiz)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">בחן ${parseFloat(c.quiz)<parseFloat(ex)?'🛡️':'✅'}</span>`; el.innerHTML=h; }
+        function setChartType(t) { currentChartType = t; ['bar', 'line', 'ai'].forEach(id => document.getElementById(`btn-${id}`).classList.toggle('active-tab', id === t)); document.getElementById('gradeChart').style.display = t === 'ai' ? 'none' : 'block'; document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai'); document.getElementById('filterContainer').style.visibility = t === 'ai' ? 'hidden' : 'visible'; if(chart){chart.destroy(); chart=null;} calculateAll(); }
+        function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); calculateAll(); }
+        function enforceMax(el) { if (parseFloat(el.value) > 100) el.value = 100; if (parseFloat(el.value) < 0) el.value = 0; }
         function saveData() { localStorage.setItem('harelGradesV11_2', JSON.stringify(courses)); }
         function updateFilterOptions() { const s=document.getElementById('scopeFilter'), ms=courses.length>0?Math.max(...courses.map(c=>c.semester)):1; let h='<option value="all">כל התואר</option>'; for(let i=1;i<=Math.ceil(ms/2);i++)h+=`<option value="year_${i}">שנה ${['א','ב','ג','ד'][i-1]||i}</option>`; h+=`<option value="sem_${ms}">סמסטר אחרון (${ms})</option>`; s.innerHTML=h; }
         function shouldShowInChart(c) { const f=document.getElementById('scopeFilter').value; if(f==='all')return true; if(f.startsWith('sem_'))return c.semester===parseInt(f.split('_')[1]); if(f.startsWith('year_')){const y=parseInt(f.split('_')[1]); return c.semester>=y*2-1 && c.semester<=y*2;} return true; }
-        function calculateTarget() { const t = parseFloat(document.getElementById('targetInput').value); const res = document.getElementById('targetResult'); if(!t){res.innerText="---"; return;} let tc=0, cp=0, tewc=0; courses.forEach(c=>{ if(c.isBinary) return; const cr=parseFloat(c.credits)||0; tc+=cr; const ew=Math.max(0, 100-(c.weights.work||0)-(c.weights.quiz||0)); cp+=((c.work||0)*(c.weights.work||0)/100+(c.quiz||0)*(c.weights.quiz||0)/100)*cr; tewc+=cr*(ew/100); }); if(tc===0||tewc<=0)return; const n=Math.ceil(((t*tc)-cp)/tewc); res.innerHTML=n>100?`<span class="text-red-500">${n} 😱</span>`:(n<0?`<span class="text-green-500">עברת!</span>`:n); }
+        function getBarColor(g) { const n = parseFloat(g); return n >= 90 ? '#10b981' : (n >= 80 ? '#3b82f6' : (n >= 60 ? '#eab308' : '#ef4444')); }
+        function finalColor(g) { const n = parseFloat(g); return n >= 90 ? 'text-emerald-500' : (n >= 80 ? 'text-blue-600' : (n >= 60 ? 'text-yellow-500' : 'text-red-500')); }
         function startNewSemester() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 0; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms+1, credits: 3, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 60, isBinary: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
         function addNewCourse() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 60, isBinary: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
+        function resetAllSimulations() { courses.forEach(c => c.simExam = null); renderAll(); calculateAll(); }
+        function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(courses,null,2)],{type:"application/json"})); a.download=`Grades.json`; a.click(); }
+        function importData(i) { const f=i.files[0]; if(!f)return; const r = new FileReader(); r.onload=e=>{ try{const d=JSON.parse(e.target.result); if(Array.isArray(d)){courses=d; saveData(); renderAll(); calculateAll();}}catch(err){alert('שגיאה')} }; r.readAsText(f); }
         function removeCourse(i) { if(confirm("למחוק?")) { courses.splice(i,1); saveData(); renderAll(); calculateAll(); } }
         function resetDefaults() { if(confirm("לאפס?")) { courses = JSON.parse(JSON.stringify(defaultData)); saveData(); renderAll(); calculateAll(); } }
-        function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(courses,null,2)],{type:"application/json"})); a.download=`Grades.json`; a.click(); }
-        function triggerImport() { document.getElementById('importFile').click(); }
-        function importData(i) { const f=i.files[0]; if(!f)return; const r = new FileReader(); r.onload=e=>{ try{const d=JSON.parse(e.target.result); if(Array.isArray(d)){courses=d; saveData(); renderAll(); calculateAll();}}catch(err){alert('שגיאה')} }; r.readAsText(f); }
-        function refreshSingleCard(i) { const c = courses[i]; if(c.isBinary) return; const f = calculateCourseFinal(c, true); const fe = document.getElementById(`final_${i}`); if(fe) { fe.innerText = f; fe.className = `text-3xl font-black ${finalColor(f)}`; } }
+        function calculateTarget() { const t = Math.min(100, parseFloat(document.getElementById('targetInput').value)); const res = document.getElementById('targetResult'); if(!t){res.innerText="---"; return;} let tc=0, cp=0, tewc=0; courses.forEach(c=>{ if(c.isBinary) return; const cr=parseFloat(c.credits)||0; tc+=cr; const ew=Math.max(0, 100-(c.weights.work||0)-(c.weights.quiz||0)); cp+=((c.work||0)*(c.weights.work||0)/100+(c.quiz||0)*(c.weights.quiz||0)/100)*cr; tewc+=cr*(ew/100); }); if(tc===0||tewc<=0)return; const n=Math.ceil(((t*tc)-cp)/tewc); res.innerHTML=n>100?`<span class="text-red-500">${n} 😱</span>`:(n<0?`<span class="text-green-500">עברת!</span>`:n); }
 
         function renderAll() {
             const w = document.getElementById('semesterWrapper'); w.innerHTML = '';
@@ -299,13 +356,9 @@
                 w.innerHTML += `<div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-slate-100 dark:border-dark-border overflow-hidden"><div class="p-4 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between cursor-pointer" onclick="document.getElementById('semContainer_${s}').classList.toggle('hidden-content'); document.getElementById('semIcon_${s}').classList.toggle('rotate-180')"><div class="flex items-center gap-3"><i id="semIcon_${s}" class="fas fa-chevron-down text-slate-400 transition-transform"></i><h2 class="text-lg font-black text-slate-700 dark:text-slate-200">סמסטר ${s}</h2></div><div class="bg-white dark:bg-slate-700 px-3 py-1 rounded-full border border-slate-200 shadow-sm"><span id="semAvg_${s}" class="text-lg font-bold text-blue-600">0.00</span></div></div><div id="semContainer_${s}" class="p-4 space-y-4 border-t border-slate-100 dark:border-slate-700/50"></div></div>`;
                 courses.forEach((c, i) => {
                     if (c.semester !== s) return;
-                    const final = calculateCourseFinal(c, true); const isS = c.simExam !== null; let bdg = '';
-                    if (!c.isBinary && (c.workMagen || c.quizMagen)) {
-                        const ex = isS ? c.simExam : c.exam;
-                        if (c.workMagen) bdg += `<span class="magen-badge text-[8px] ${parseFloat(c.work)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">עב' ${parseFloat(c.work)<parseFloat(ex)?'🛡️ הושמט':'✅ נחשב'}</span>`;
-                        if (c.quizMagen) bdg += `<span class="magen-badge text-[8px] ${parseFloat(c.quiz)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">בחן ${parseFloat(c.quiz)<parseFloat(ex)?'🛡️ הושמט':'✅ נחשב'}</span>`;
-                    }
-                    document.getElementById(`semContainer_${s}`).innerHTML += `<div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-dark-border hover:border-blue-300 transition-colors group"><div class="flex flex-col sm:flex-row items-center gap-4"><div class="flex-1 w-full"><div class="flex justify-between items-center mb-2"><div class="flex items-center flex-wrap gap-1"><h3 class="font-bold text-slate-700 dark:text-slate-200 text-lg">${c.name}</h3>${bdg}</div><span class="text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded">${c.credits} נק"ז</span></div>${c.isBinary ? '<div class="text-green-500 font-bold text-xl"><i class="fas fa-check-circle"></i> עובר</div>' : `<div class="space-y-3"><div class="flex items-center gap-3"><div class="w-10 text-center"><span class="text-sm font-bold text-blue-600">${c.exam}</span><p class="text-[8px] text-slate-400">אמת</p></div><div class="flex-1 pt-1"><input type="range" value="${c.exam}" oninput="updateData(${i},'exam',this.value)" class="accent-blue-600"></div></div><div class="flex items-center gap-3 bg-indigo-50/50 dark:bg-indigo-900/10 p-2 rounded-lg"><div class="w-10 text-center"><span class="text-sm font-bold text-indigo-600" id="simVal_${i}">${isS?c.simExam:'--'}</span><p class="text-[8px] text-indigo-400 font-bold">מה אם?</p></div><div class="flex-1 pt-1"><input type="range" value="${isS?c.simExam:c.exam}" oninput="updateSim(${i},this.value)" class="accent-indigo-600 sim-slider"></div><button onclick="updateSim(${i},'')" class="text-[10px] text-slate-300 hover:text-red-400"><i class="fas fa-times-circle"></i></button></div></div>`}</div>${c.isBinary?'':`<div class="text-center w-full sm:w-24 sm:pl-4 sm:border-r border-slate-100 dark:border-slate-700"><div class="text-[10px] text-slate-400 font-bold uppercase">סופי</div><div id="final_${i}" class="text-3xl font-black ${finalColor(final)}">${final}</div><div id="simDiff_${i}"></div></div>`}</div></div>`;
+                    const f = calculateCourseFinal(c, true); const isS = c.simExam !== null;
+                    document.getElementById(`semContainer_${s}`).innerHTML += `<div class="bg-white dark:bg-dark-card p-4 rounded-xl border border-slate-100 dark:border-dark-border hover:border-blue-300 transition-colors group"><div class="flex flex-col sm:flex-row items-center gap-4"><div class="flex-1 w-full"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-1"><h3 class="font-bold text-slate-700 dark:text-slate-200 text-lg">${c.name}</h3><div id="magenBox_${i}"></div></div><span class="text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded">${c.credits} נק"ז</span></div>${c.isBinary ? '<div class="text-green-500 font-bold text-xl"><i class="fas fa-check-circle"></i> עובר</div>' : `<div class="space-y-3"><div class="flex items-center gap-3"><div class="w-10 text-center"><span class="text-sm font-bold text-blue-600" id="examLabel_${i}">${c.exam}</span><p class="text-[8px] text-slate-400">אמת</p></div><div class="flex-1 pt-1"><input type="range" min="0" max="100" value="${c.exam}" oninput="updateExamLive(${i}, this.value)" class="accent-blue-600"></div></div><div class="flex items-center gap-3 bg-indigo-50/50 dark:bg-indigo-900/10 p-2 rounded-lg"><div class="w-10 text-center"><span class="text-sm font-bold text-indigo-600" id="simVal_${i}">${isS?c.simExam:'--'}</span><p class="text-[8px] text-indigo-400 font-bold uppercase">מה אם?</p></div><div class="flex-1 pt-1"><input type="range" min="0" max="100" value="${isS?c.simExam:c.exam}" oninput="updateSimLive(${i},this.value)" class="accent-indigo-600 sim-slider"></div><button onclick="updateSimLive(${i},'')" class="text-[10px] text-slate-300 hover:text-red-400"><i class="fas fa-times-circle"></i></button></div></div>`}</div>${c.isBinary?'':`<div class="text-center w-full sm:w-24 sm:pl-4 sm:border-r border-slate-100 dark:border-slate-700"><div class="text-[10px] text-slate-400 font-bold uppercase">סופי</div><div id="final_${i}" class="text-3xl font-black ${finalColor(f)}">${f}</div><div id="simDiff_${i}"></div></div>`}</div></div>`;
+                    updateMagenBadges(i);
                 });
             });
             renderTable();
@@ -321,7 +374,7 @@
                     courses.forEach((c, i) => {
                         if (c.semester !== s) return;
                         const bin = c.isBinary;
-                        tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-700"><td class="p-1"><input type="text" value="${c.name}" onchange="updateData(${i},'name',this.value)" class="input-minimal text-right w-20"></td><td class="p-1 text-center"><input type="checkbox" onchange="updateData(${i},'isBinary')" ${bin?'checked':''} class="w-3 h-3 cursor-pointer"></td><td class="p-1"><input type="number" value="${c.semester}" onchange="updateData(${i},'semester',this.value)" class="input-minimal w-10 text-center"></td><td class="p-1"><input type="number" value="${c.credits}" onchange="updateData(${i},'credits',this.value)" class="input-minimal w-10 text-center"></td><td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.work)}" onchange="updateData(${i},'work',this.value)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'work')" class="text-[9px] text-slate-400 hover:text-blue-500"><i class="fas fa-calculator"></i></button></div></td><td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.quiz)}" onchange="updateData(${i},'quiz',this.value)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'quiz')" class="text-[9px] text-slate-400 hover:text-blue-500"><i class="fas fa-calculator"></i></button></div></td><td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-0.5 justify-center"><input type="number" value="${c.weights.work}" onchange="updateData(${i},'weights',this.value,'work')" class="input-minimal text-orange-600 w-8"> <button onclick="toggleMagen(${i},'work')" class="text-[9px] ${c.workMagen?'text-green-500':'text-slate-300'}"><i class="fas fa-shield-alt"></i></button></div></td><td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-0.5 justify-center"><input type="number" value="${c.weights.quiz}" onchange="updateData(${i},'weights',this.value,'quiz')" class="input-minimal text-orange-600 w-8"> <button onclick="toggleMagen(${i},'quiz')" class="text-[9px] ${c.quizMagen?'text-green-500':'text-slate-300'}"><i class="fas fa-shield-alt"></i></button></div></td><td class="p-1 text-center"><button onclick="removeCourse(${i})" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-times"></i></button></td></tr>`;
+                        tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-700"><td class="p-1"><input type="text" value="${c.name}" oninput="updateData(${i},'name',this.value)" class="input-minimal text-right w-20"></td><td class="p-1 text-center"><input type="checkbox" oninput="updateData(${i},'isBinary')" ${bin?'checked':''} class="w-3 h-3 cursor-pointer"></td><td class="p-1"><input type="number" value="${c.semester}" oninput="updateData(${i},'semester',this.value)" class="input-minimal w-10 text-center"></td><td class="p-1"><input type="number" value="${c.credits}" oninput="updateData(${i},'credits',this.value, null, this)" class="input-minimal w-10 text-center"></td><td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.work)}" oninput="updateData(${i},'work',this.value, null, this)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'work')" class="text-[9px] text-slate-400 hover:text-blue-500"><i class="fas fa-calculator"></i></button></div></td><td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.quiz)}" oninput="updateData(${i},'quiz',this.value, null, this)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'quiz')" class="text-[9px] text-slate-400 hover:text-blue-500"><i class="fas fa-calculator"></i></button></div></td><td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-0.5 justify-center"><input type="number" value="${c.weights.work}" oninput="updateData(${i},'weights',this.value,'work', this)" class="input-minimal text-orange-600 w-8"> <button onclick="toggleMagen(${i},'work')" class="text-[9px] ${c.workMagen?'text-green-500':'text-slate-300'}"><i class="fas fa-shield-alt"></i></button></div></td><td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-0.5 justify-center"><input type="number" value="${c.weights.quiz}" oninput="updateData(${i},'weights',this.value,'quiz', this)" class="input-minimal text-orange-600 w-8"> <button onclick="toggleMagen(${i},'quiz')" class="text-[9px] ${c.quizMagen?'text-green-500':'text-slate-300'}"><i class="fas fa-shield-alt"></i></button></div></td><td class="p-1 text-center"><button onclick="removeCourse(${i})" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-times"></i></button></td></tr>`;
                     });
                 }
             });
