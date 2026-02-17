@@ -161,11 +161,12 @@
             { id: 'discrete', name: 'דיסקרטית', semester: 1, credits: 3, work: 100, quiz: 78, weights: { work: 8, quiz: 7 }, exam: 100, workMagen: false, quizMagen: true, isBinary: false, simExam: null },
             { id: 'linear', name: 'לינארית', semester: 1, credits: 3.5, work: 100, quiz: 90, weights: { work: 15, quiz: 10 }, exam: 100, isBinary: false, simExam: null },
             { id: 'physics', name: 'פיזיקה', semester: 1, credits: 3.5, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 100, quizMagen: false, isBinary: false, simExam: null },
-            { id: 'linear', name: 'מבוא מתמטי', semester: 1, credits: 2.5, work: 100, quiz: 90, weights: { work: 30, quiz: 0 }, exam: 100, isBinary: false, simExam: null }, 
+            { id: 'linear', name: 'מבוא מתמטי', semester: 1, credits: 2.5, work: 100, quiz: 0, weights: { work: 30, quiz: 0 }, exam: 100, isBinary: false, simExam: null }, 
         ];
         let courses = JSON.parse(localStorage.getItem('harelGradesV11_2')) || JSON.parse(JSON.stringify(defaultData));
         courses.forEach(c => { if(c.simExam === undefined) c.simExam = null; });
         let collapsedSemesters = {}; let chart = null; let currentChartType = 'bar'; let activeCalcContext = null;
+        let celebratedCourses = {}; // מערך מעקב לקונפטי לפי קורס
 
         function init() {
             if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
@@ -208,6 +209,15 @@
             courses[i].exam = Math.min(100, Math.max(0, parseFloat(val)||0));
             document.getElementById(`examLabel_${i}`).innerText = courses[i].exam;
             const fS = calculateCourseFinal(courses[i], true);
+            
+            // בדיקת קונפטי לציון 90+
+            if (parseFloat(fS) >= 90 && !celebratedCourses[i]) {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#FFD700', '#10b981'] });
+                celebratedCourses[i] = true;
+            } else if (parseFloat(fS) < 90) {
+                celebratedCourses[i] = false;
+            }
+
             const fe = document.getElementById(`final_${i}`); if(fe) { fe.innerText = fS; fe.className = `text-3xl font-black ${finalColor(fS)}`; }
             updateMagenBadges(i); calculateAll(); saveData();
         }
@@ -215,7 +225,17 @@
         function updateSimLive(i, val) {
             courses[i].simExam = val === "" ? null : Math.min(100, Math.max(0, parseFloat(val)));
             document.getElementById(`simVal_${i}`).innerText = courses[i].simExam !== null ? courses[i].simExam : '--';
-            const fS = calculateCourseFinal(courses[i], true), fR = calculateCourseFinal(courses[i], false);
+            const fS = calculateCourseFinal(courses[i], true);
+            
+            // בדיקת קונפטי לסימולציית 90+
+            if (parseFloat(fS) >= 90 && !celebratedCourses[i + '_sim']) {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#6366f1', '#10b981'] });
+                celebratedCourses[i + '_sim'] = true;
+            } else if (parseFloat(fS) < 90) {
+                celebratedCourses[i + '_sim'] = false;
+            }
+
+            const fR = calculateCourseFinal(courses[i], false);
             const fe = document.getElementById(`final_${i}`); if(fe) { fe.innerText = fS; fe.className = `text-3xl font-black ${finalColor(fS)}`; }
             const diff = (parseFloat(fS) - parseFloat(fR)).toFixed(1);
             document.getElementById(`simDiff_${i}`).innerHTML = courses[i].simExam !== null ? `<span class="text-[10px] ${diff>=0?'text-green-500':'text-red-400'} font-bold">${diff>=0?'+':''}${diff}</span>` : '';
@@ -244,7 +264,6 @@
             const ctx = document.getElementById('gradeChart').getContext('2d');
             const chartData = currentChartType === 'bar' ? data : Object.keys(semStats).sort().map(s => semStats[s].cr > 0 ? (semStats[s].sum/semStats[s].cr).toFixed(2) : 0);
             const chartLabels = currentChartType === 'bar' ? labels : Object.keys(semStats).sort().map(s => `סמ' ${s}`);
-
             if (chart) {
                 chart.data.labels = chartLabels;
                 chart.data.datasets[0].data = chartData;
@@ -253,10 +272,7 @@
             } else {
                 chart = new Chart(ctx, {
                     type: currentChartType === 'bar' ? 'bar' : 'line',
-                    data: {
-                        labels: chartLabels,
-                        datasets: [{ data: chartData, backgroundColor: colors, borderColor: '#3b82f6', tension: 0.4, fill: true }]
-                    },
+                    data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: colors, borderColor: '#3b82f6', tension: 0.4, fill: true }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 }, x: { ticks: { font: { size: 9 } } } } }
                 });
             }
@@ -265,7 +281,6 @@
         function updateAIAdvisor() {
             const out = document.getElementById('aiTextOutput'), list = document.getElementById('retakeList'), totalCr = courses.reduce((s, c) => s + (c.isBinary ? 0 : parseFloat(c.credits) || 0), 0);
             if (totalCr === 0) { out.innerText = "הזן ציונים כדי לקבל המלצות."; return; }
-            
             let insights = courses.filter(c => !c.isBinary).map(c => {
                 const cur = parseFloat(calculateCourseFinal(c, true));
                 const weight = (parseFloat(c.credits) || 0) / totalCr;
@@ -273,7 +288,6 @@
                 return { name: c.name, gain: (100 - cur) * weight, weight, impact10pts, isSim: c.simExam !== null };
             });
             insights.sort((a, b) => b.gain - a.gain);
-            
             out.innerHTML = `ניתחתי את הנתונים שלך. הנה המבחנים הכי רווחיים לממוצע הכללי:`;
             list.innerHTML = '';
             insights.slice(0, 3).forEach((ins, i) => {
@@ -283,53 +297,12 @@
             });
         }
 
-        function openSubCalc(i, t) {
-            activeCalcContext = { index: i, type: t };
-            document.getElementById('modalTitleSuffix').innerText = t === 'work' ? 'עבודות' : 'בחנים';
-            document.getElementById('modalRows').innerHTML = ''; 
-            addSubCalcRow(); addSubCalcRow();
-            document.getElementById('subCalcModal').classList.remove('hidden');
-            updateModalResults();
-        }
+        function openSubCalc(i, t) { activeCalcContext = { index: i, type: t }; document.getElementById('modalTitleSuffix').innerText = t === 'work' ? 'עבודות' : 'בחנים'; document.getElementById('modalRows').innerHTML = ''; addSubCalcRow(); addSubCalcRow(); document.getElementById('subCalcModal').classList.remove('hidden'); updateModalResults(); }
         function closeSubCalc() { document.getElementById('subCalcModal').classList.add('hidden'); activeCalcContext = null; }
-        function addSubCalcRow() {
-            const d = document.createElement('div'); d.className = "grid grid-cols-12 gap-2 items-center subcalc-row";
-            d.innerHTML = `<div class="col-span-7"><input type="number" placeholder="ציון" min="0" max="100" oninput="updateModalResults()" class="sub-grade w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-4"><input type="number" placeholder="% משקל" min="0" max="100" oninput="updateModalResults()" class="sub-weight w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-1 text-center"><button onclick="this.parentElement.parentElement.remove(); updateModalResults();" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button></div>`;
-            document.getElementById('modalRows').appendChild(d);
-        }
-        function updateModalResults() {
-            let tw = 0, ws = 0; 
-            document.querySelectorAll('.subcalc-row').forEach(r => { 
-                let gIn = r.querySelector('.sub-grade'), wIn = r.querySelector('.sub-weight');
-                if (parseFloat(gIn.value) > 100) gIn.value = 100;
-                if (parseFloat(wIn.value) > 100) wIn.value = 100;
-                let g = parseFloat(gIn.value)||0, w = parseFloat(wIn.value)||0;
-                if(w>0){tw+=w; ws+=(g*w);}
-            });
-            document.getElementById('modalTotalWeight').innerText = tw.toFixed(1) + '%';
-            document.getElementById('modalFinalGrade').innerText = tw > 0 ? (ws/tw).toFixed(2) : "0";
-        }
-        function applySubCalc() {
-            if (!activeCalcContext) return;
-            let tw = 0, ws = 0;
-            document.querySelectorAll('.subcalc-row').forEach(r => {
-                let g = parseFloat(r.querySelector('.sub-grade').value)||0;
-                let w = parseFloat(r.querySelector('.sub-weight').value)||0;
-                if(w>0){tw+=w; ws+=(g*w);}
-            });
-            const { index, type } = activeCalcContext;
-            const newWeight = Math.min(100, tw);
-            if (type === 'work') {
-                courses[index].work = (ws/tw)||0; courses[index].weights.work = newWeight;
-                if (newWeight + courses[index].weights.quiz > 100) courses[index].weights.quiz = 100 - newWeight;
-            } else {
-                courses[index].quiz = (ws/tw)||0; courses[index].weights.quiz = newWeight;
-                if (newWeight + courses[index].weights.work > 100) courses[index].weights.work = 100 - newWeight;
-            }
-            saveData(); renderAll(); calculateAll(); closeSubCalc();
-        }
-
-        function updateMagenBadges(i) { const c=courses[i], el=document.getElementById(`magenBox_${i}`); if(!el)return; const ex=c.simExam!==null?c.simExam:c.exam; let h=''; if(c.workMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.work)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">עב' ${parseFloat(c.work)<parseFloat(ex)?'🛡️':'✅'}</span>`; if(c.quizMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.quiz)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">בחן ${parseFloat(c.quiz)<parseFloat(ex)?'🛡️':'✅'}</span>`; el.innerHTML=h; }
+        function addSubCalcRow() { const d = document.createElement('div'); d.className = "grid grid-cols-12 gap-2 items-center subcalc-row"; d.innerHTML = `<div class="col-span-7"><input type="number" placeholder="ציון" min="0" max="100" oninput="updateModalResults()" class="sub-grade w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-4"><input type="number" placeholder="% משקל" min="0" max="100" oninput="updateModalResults()" class="sub-weight w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-1 text-center"><button onclick="this.parentElement.parentElement.remove(); updateModalResults();" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button></div>`; document.getElementById('modalRows').appendChild(d); }
+        function updateModalResults() { let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { let gIn = r.querySelector('.sub-grade'), wIn = r.querySelector('.sub-weight'); if (parseFloat(gIn.value) > 100) gIn.value = 100; if (parseFloat(wIn.value) > 100) wIn.value = 100; let g = parseFloat(gIn.value)||0, w = parseFloat(wIn.value)||0; if(w>0){tw+=w; ws+=(g*w);} }); document.getElementById('modalTotalWeight').innerText = tw.toFixed(1) + '%'; document.getElementById('modalFinalGrade').innerText = tw > 0 ? (ws/tw).toFixed(2) : "0"; }
+        function applySubCalc() { if (!activeCalcContext) return; let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { let g = parseFloat(r.querySelector('.sub-grade').value)||0, w = parseFloat(r.querySelector('.sub-weight').value)||0; if(w>0){tw+=w; ws+=(g*w);} }); const { index, type } = activeCalcContext; const newWeight = Math.min(100, tw); if (type === 'work') { courses[index].work = (ws/tw)||0; courses[index].weights.work = newWeight; if (newWeight + courses[index].weights.quiz > 100) courses[index].weights.quiz = 100 - newWeight; } else { courses[index].quiz = (ws/tw)||0; courses[index].weights.quiz = newWeight; if (newWeight + courses[index].weights.work > 100) courses[index].weights.work = 100 - newWeight; } saveData(); renderAll(); calculateAll(); closeSubCalc(); }
+        function updateMagenBadges(i) { const c=courses[i], el=document.getElementById(`magenBox_${i}`); if(!el)return; const ex=c.simExam!==null?c.simExam:c.exam; let h=''; if(c.workMagen) h+=`<span class=\"magen-badge text-[8px] ${parseFloat(c.work)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1\">עב' ${parseFloat(c.work)<parseFloat(ex)?'🛡️':'✅'}</span>`; if(c.quizMagen) h+=`<span class=\"magen-badge text-[8px] ${parseFloat(c.quiz)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1\">בחן ${parseFloat(c.quiz)<parseFloat(ex)?'🛡️':'✅'}</span>`; el.innerHTML=h; }
         function setChartType(t) { currentChartType = t; ['bar', 'line', 'ai'].forEach(id => document.getElementById(`btn-${id}`).classList.toggle('active-tab', id === t)); document.getElementById('gradeChart').style.display = t === 'ai' ? 'none' : 'block'; document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai'); document.getElementById('filterContainer').style.visibility = t === 'ai' ? 'hidden' : 'visible'; if(chart){chart.destroy(); chart=null;} calculateAll(); }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); calculateAll(); }
         function enforceMax(el) { if (parseFloat(el.value) > 100) el.value = 100; if (parseFloat(el.value) < 0) el.value = 0; }
@@ -342,42 +315,25 @@
         function addNewCourse() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 60, isBinary: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
         function resetAllSimulations() { courses.forEach(c => c.simExam = null); renderAll(); calculateAll(); }
         function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(courses,null,2)],{type:"application/json"})); a.download=`Grades.json`; a.click(); }
-        
-        // --- פונקציית טעינה (Import) מתוקנת ---
         function triggerImport() { document.getElementById('importFile').click(); }
-
         function importData(input) {
-            const file = input.files[0];
-            if (!file) return;
+            const file = input.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = e => {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (Array.isArray(data)) {
-                        courses = data;
-                        saveData();
-                        renderAll();
-                        calculateAll();
-                        alert('הנתונים נטענו בהצלחה!');
-                    } else if (data.courses && Array.isArray(data.courses)) {
-                        // תמיכה בפורמט מורכב יותר אם תרצה בעתיד
-                        courses = data.courses;
-                        saveData();
-                        renderAll();
-                        calculateAll();
-                        alert('הנתונים נטענו בהצלחה!');
-                    }
-                } catch (err) {
-                    alert('שגיאה בטעינת הקובץ. וודא שמדובר בקובץ JSON תקין.');
-                }
-                // איפוס הערך כדי לאפשר טעינה חוזרת של אותו קובץ אם תרצה
-                input.value = '';
+                    if (Array.isArray(data)) { courses = data; } 
+                    else if (data.courses && Array.isArray(data.courses)) { courses = data.courses; }
+                    saveData(); renderAll(); calculateAll();
+                    alert('הנתונים נטענו בהצלחה!');
+                } catch (err) { alert('שגיאה בטעינת הקובץ.'); }
+                input.value = ''; 
             };
             reader.readAsText(file);
         }
-
         function removeCourse(i) { if(confirm("למחוק?")) { courses.splice(i,1); saveData(); renderAll(); calculateAll(); } }
         function resetDefaults() { if(confirm("לאפס?")) { courses = JSON.parse(JSON.stringify(defaultData)); saveData(); renderAll(); calculateAll(); } }
+        function toggleMagen(i, type) { if(type==='work') courses[i].workMagen = !courses[i].workMagen; else courses[i].quizMagen = !courses[i].quizMagen; saveData(); renderAll(); calculateAll(); }
         function toggleMagen(i, type) { if(type==='work') courses[i].workMagen = !courses[i].workMagen; else courses[i].quizMagen = !courses[i].quizMagen; saveData(); renderAll(); calculateAll(); }
 
         function calculateTarget() { const t = Math.min(100, parseFloat(document.getElementById('targetInput').value)); const res = document.getElementById('targetResult'); if(!t){res.innerText="---"; return;} let tc=0, cp=0, tewc=0; courses.forEach(c=>{ if(c.isBinary) return; const cr=parseFloat(c.credits)||0; tc+=cr; const ew=Math.max(0, 100-(c.weights.work||0)-(c.weights.quiz||0)); cp+=((c.work||0)*(c.weights.work||0)/100+(c.quiz||0)*(c.weights.quiz||0)/100)*cr; tewc+=cr*(ew/100); }); if(tc===0||tewc<=0)return; const n=Math.ceil(((t*tc)-cp)/tewc); res.innerHTML=n>100?`<span class="text-red-500">${n} 😱</span>`:(n<0?`<span class="text-green-500">עברת!</span>`:n); }
@@ -426,5 +382,3 @@
     </script>
 </body>
 </html>
-
-
