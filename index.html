@@ -182,7 +182,6 @@
             let ew = Math.max(0, 100 - wp - qp);
             if (c.workMagen && w < ex) wp = 0; if (c.quizMagen && q < ex) qp = 0;
             let tw = wp + qp + ew; if (tw === 0) return ex.toFixed(2);
-            // הגבלה ל-100 כפי שביקשת
             return Math.min(100, (((w * wp) + (q * qp) + (ex * ew)) / tw)).toFixed(2);
         }
 
@@ -343,11 +342,43 @@
         function addNewCourse() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 60, isBinary: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
         function resetAllSimulations() { courses.forEach(c => c.simExam = null); renderAll(); calculateAll(); }
         function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(courses,null,2)],{type:"application/json"})); a.download=`Grades.json`; a.click(); }
-        function importData(i) { const f=i.files[0]; if(!f)return; const r = new FileReader(); r.onload=e=>{ try{const d=JSON.parse(e.target.result); if(Array.isArray(d)){courses=d; saveData(); renderAll(); calculateAll();}}catch(err){alert('שגיאה')} }; r.readAsText(f); }
+        
+        // --- פונקציית טעינה (Import) מתוקנת ---
+        function triggerImport() { document.getElementById('importFile').click(); }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data)) {
+                        courses = data;
+                        saveData();
+                        renderAll();
+                        calculateAll();
+                        alert('הנתונים נטענו בהצלחה!');
+                    } else if (data.courses && Array.isArray(data.courses)) {
+                        // תמיכה בפורמט מורכב יותר אם תרצה בעתיד
+                        courses = data.courses;
+                        saveData();
+                        renderAll();
+                        calculateAll();
+                        alert('הנתונים נטענו בהצלחה!');
+                    }
+                } catch (err) {
+                    alert('שגיאה בטעינת הקובץ. וודא שמדובר בקובץ JSON תקין.');
+                }
+                // איפוס הערך כדי לאפשר טעינה חוזרת של אותו קובץ אם תרצה
+                input.value = '';
+            };
+            reader.readAsText(file);
+        }
+
         function removeCourse(i) { if(confirm("למחוק?")) { courses.splice(i,1); saveData(); renderAll(); calculateAll(); } }
         function resetDefaults() { if(confirm("לאפס?")) { courses = JSON.parse(JSON.stringify(defaultData)); saveData(); renderAll(); calculateAll(); } }
         function toggleMagen(i, type) { if(type==='work') courses[i].workMagen = !courses[i].workMagen; else courses[i].quizMagen = !courses[i].quizMagen; saveData(); renderAll(); calculateAll(); }
-        function triggerImport() { document.getElementById('importFile').click(); }
 
         function calculateTarget() { const t = Math.min(100, parseFloat(document.getElementById('targetInput').value)); const res = document.getElementById('targetResult'); if(!t){res.innerText="---"; return;} let tc=0, cp=0, tewc=0; courses.forEach(c=>{ if(c.isBinary) return; const cr=parseFloat(c.credits)||0; tc+=cr; const ew=Math.max(0, 100-(c.weights.work||0)-(c.weights.quiz||0)); cp+=((c.work||0)*(c.weights.work||0)/100+(c.quiz||0)*(c.weights.quiz||0)/100)*cr; tewc+=cr*(ew/100); }); if(tc===0||tewc<=0)return; const n=Math.ceil(((t*tc)-cp)/tewc); res.innerHTML=n>100?`<span class="text-red-500">${n} 😱</span>`:(n<0?`<span class="text-green-500">עברת!</span>`:n); }
 
@@ -366,7 +397,6 @@
             renderTable();
         }
 
-        // --- כאן נמצא התיקון לטבלה: החלפת oninput ב-onchange ---
         function renderTable() {
             const tb = document.getElementById('settingsTableBody'); tb.innerHTML = '';
             const sems = [...new Set(courses.map(c => c.semester))].sort((a,b) => a-b);
