@@ -33,8 +33,13 @@
         .ai-pulse { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
-        @media (min-width: 1280px) {
-            .sticky-sidebar { position: sticky; top: 110px; max-height: calc(100vh - 130px); overflow-y: auto; padding-left: 4px; }
+       @media (min-width: 1280px) {
+            .sticky-sidebar { 
+                position: sticky; 
+                top: 110px; 
+                /* הוסר ה-max-height וה-overflow כדי למנוע חיתוך */
+                padding-left: 4px; 
+            }
         }
 
         @media print {
@@ -383,3 +388,4 @@
     </script>
 </body>
 </html>
+
