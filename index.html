@@ -158,11 +158,11 @@
 
     <script>
         const defaultData = [
-            { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 10, quiz: 15 }, exam: 100, workMagen: false, quizMagen: true, isBinary: false, simExam: null },
-            { id: 'discrete', name: 'דיסקרטית', semester: 1, credits: 3, work: 100, quiz: 78, weights: { work: 8, quiz: 7 }, exam: 100, workMagen: true, quizMagen: false, isBinary: false, simExam: null },
+            { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 10, quiz: 15 }, exam: 100, workMagen: false, quizMagen: false, isBinary: false, simExam: null },
+            { id: 'discrete', name: 'דיסקרטית', semester: 1, credits: 3, work: 100, quiz: 78, weights: { work: 8, quiz: 7 }, exam: 100, workMagen: false, quizMagen: true, isBinary: false, simExam: null },
             { id: 'linear', name: 'לינארית', semester: 1, credits: 3.5, work: 100, quiz: 90, weights: { work: 15, quiz: 15 }, exam: 100, isBinary: false, simExam: null },
-            { id: 'physics', name: 'פיזיקה', semester: 1, credits: 3.5, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 100, quizMagen: true, isBinary: false, simExam: null },
-            { id: 'sport', name: 'מבוא מתמטי', semester: 1, credits: 1, work: 0, quiz: 0, weights: { work: 30, quiz: 0 }, exam: 0, isBinary: true, simExam: null }, 
+            { id: 'physics', name: 'פיזיקה', semester: 1, credits: 3.5, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 100, quizMagen: false, isBinary: false, simExam: null },
+            { id: 'linear', name: 'מבוא מתמטי', semester: 1, credits: 3.5, work: 100, quiz: 90, weights: { work: 15, quiz: 15 }, exam: 100, isBinary: false, simExam: null }, 
         ];
         let courses = JSON.parse(localStorage.getItem('harelGradesV11_2')) || JSON.parse(JSON.stringify(defaultData));
         courses.forEach(c => { if(c.simExam === undefined) c.simExam = null; });
@@ -388,5 +388,6 @@
     </script>
 </body>
 </html>
+
 
 
