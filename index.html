@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl" class="light">
 <head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-16BVE6F165"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-16BVE6F165"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -145,7 +144,7 @@
                                 <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(this)">
                                 <button onclick="exportData()" title="גיבוי"><i class="fas fa-download text-slate-400"></i></button>
                                 <button onclick="triggerImport()" title="טעינה"><i class="fas fa-upload text-slate-400"></i></button>
-                                <button onclick="resetDefaults()" title=\"איפוס\"><i class=\"fas fa-trash-alt text-slate-400 hover:text-red-500\"></i></button>
+                                <button onclick="resetDefaults()" title="איפוס"><i class="fas fa-trash-alt text-slate-400 hover:text-red-500"></i></button>
                             </div>
                         </div>
                         <div class="overflow-x-auto p-1">
@@ -169,16 +168,68 @@
 
     <script>
         const defaultData = [
-            { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 15, quiz: 15 }, exam: 100, workMagen: false, quizMagen: false, isBinary: false, simExam: null },
-            { id: 'discrete', name: 'דיסקרטית', semester: 1, credits: 3.5, work: 100, quiz: 78, weights: { work: 8, quiz: 7 }, exam: 100, workMagen: false, quizMagen: true, isBinary: false, simExam: null },
-            { id: 'linear', name: 'לינארית', semester: 1, credits: 3.5, work: 100, quiz: 90, weights: { work: 15, quiz: 10 }, exam: 100, isBinary: false, simExam: null },
-            { id: 'physics', name: 'פיזיקה', semester: 1, credits: 3.5, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 100, quizMagen: false, isBinary: false, simExam: null },
-            { id: 'math_intro', name: 'מבוא מתמטי', semester: 1, credits: 2.5, work: 100, quiz: 0, weights: { work: 30, quiz: 0 }, exam: 100, isBinary: false, simExam: null }, 
+            { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 15, quiz: 15 }, exam: 100, workMagen: false, quizMagen: false, isBinary: false, isSummer: false, simExam: null },
+            { id: 'discrete', name: 'דיסקרטית', semester: 1, credits: 3.5, work: 100, quiz: 78, weights: { work: 8, quiz: 7 }, exam: 100, workMagen: false, quizMagen: true, isBinary: false, isSummer: false, simExam: null },
+            { id: 'linear', name: 'לינארית', semester: 1, credits: 3.5, work: 100, quiz: 90, weights: { work: 15, quiz: 10 }, exam: 100, isBinary: false, isSummer: false, simExam: null },
+            { id: 'physics', name: 'פיזיקה', semester: 1, credits: 3.5, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 100, quizMagen: false, isBinary: false, isSummer: false, simExam: null },
+            { id: 'math_intro', name: 'מבוא מתמטי', semester: 1, credits: 2.5, work: 100, quiz: 0, weights: { work: 30, quiz: 0 }, exam: 100, isBinary: false, isSummer: false, simExam: null }, 
         ];
         let courses = JSON.parse(localStorage.getItem('harelGradesV11_2')) || JSON.parse(JSON.stringify(defaultData));
-        courses.forEach(c => { if(c.simExam === undefined) c.simExam = null; });
+        
+        // הגנה על נתונים של משתמשים קיימים
+        courses.forEach(c => { 
+            if(c.simExam === undefined) c.simExam = null; 
+            if(c.isSummer === undefined) c.isSummer = false; 
+        });
+        
         let collapsedSemesters = {}; let chart = null; let currentChartType = 'bar'; let activeCalcContext = null;
-        let celebratedCourses = {}; // מעקב לקונפטי
+        let celebratedCourses = {};
+
+        // פונקציות עזר לבדיקת סמסטר קיץ ומיפוי שמות/שנים
+        function isSemesterSummer(s) { 
+            return courses.some(c => c.semester === s && c.isSummer); 
+        }
+        
+        function toggleSummerSemester(s) { 
+            const newVal = !isSemesterSummer(s); 
+            courses.forEach(c => { if (c.semester === s) c.isSummer = newVal; }); 
+            saveData(); updateFilterOptions(); renderAll(); calculateAll(); 
+        }
+
+        // המוח החדש והחכם שמחשב דינמית את שמות הסמסטרים והשנים שלהם
+        function getSemesterDisplayInfo() {
+            const sems = [...new Set(courses.map(c => c.semester))].sort((a,b) => a-b);
+            let info = {};
+            let regularCount = 0;
+            const letters = ['', 'א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ז\'', 'ח\'', 'ט\'', 'י\'', 'י"א', 'י"ב'];
+            
+            sems.forEach(s => {
+                let isSummer = isSemesterSummer(s);
+                if (!isSummer) {
+                    regularCount++;
+                    let yearNum = Math.ceil(regularCount / 2);
+                    info[s] = {
+                        name: letters[regularCount] || regularCount,
+                        year: yearNum,
+                        isSummer: false
+                    };
+                } else {
+                    let yearNum = Math.ceil(regularCount / 2);
+                    if (yearNum === 0) yearNum = 1; // למקרה שסמסטר קיץ נבחר לפני שבכלל היה סמסטר רגיל
+                    info[s] = {
+                        name: `קיץ שנה ${letters[yearNum] || yearNum}`,
+                        year: yearNum,
+                        isSummer: true
+                    };
+                }
+            });
+            return info;
+        }
+
+        function getSemesterDisplayName(s) {
+            const info = getSemesterDisplayInfo();
+            return info[s] ? info[s].name : s;
+        }
 
         function init() {
             if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
@@ -187,7 +238,6 @@
             updateFilterOptions(); renderAll(); calculateAll();
         }
 
-        // --- פונקציית עיגול אוניברסיטאי מעודכנת ---
         function calculateCourseFinal(c, useSim = true) {
             if (c.isBinary) return "עובר"; 
             let wp = parseFloat(c.weights.work) || 0, qp = parseFloat(c.weights.quiz) || 0;
@@ -203,7 +253,6 @@
             
             rawFinal = Math.min(100, rawFinal);
             
-            // לוגיקת עיגול: 0-0.5 למטה, 0.51-1 למעלה
             const integerPart = Math.floor(rawFinal);
             const decimalPart = rawFinal - integerPart;
             return (decimalPart > 0.5) ? integerPart + 1 : integerPart;
@@ -215,13 +264,11 @@
                 const cr = parseFloat(c.credits) || 0; tca += cr;
                 if (!semStats[c.semester]) semStats[c.semester] = { sum: 0, cr: 0 };
                 if (c.isBinary) return; 
-                // fS מקבל כאן את הציון המעוגל
                 const fS = parseFloat(calculateCourseFinal(c, true));
                 if(c.simExam !== null) isS = true; twS += fS * cr; tgc += cr;
                 semStats[c.semester].sum += fS * cr; semStats[c.semester].cr += cr;
                 if (shouldShowInChart(c)) { labels.push(c.name); data.push(fS); colors.push(getBarColor(fS)); }
             });
-            // הממוצע עצמו נשאר עשרוני (toFixed 2)
             document.getElementById('totalAverage').innerText = tgc > 0 ? (twS / tgc).toFixed(2) : "0.00";
             document.getElementById('totalCredits').innerText = tca;
             document.getElementById('resetSimBtn').classList.toggle('hidden', !isS);
@@ -235,7 +282,6 @@
             document.getElementById(`examLabel_${i}`).innerText = courses[i].exam;
             const fS = calculateCourseFinal(courses[i], true);
             
-            // קונפטי בציון 90+ (אמיתי)
             if (parseFloat(fS) >= 90 && !celebratedCourses[i]) {
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#FFD700', '#10b981'] });
                 celebratedCourses[i] = true;
@@ -250,7 +296,6 @@
             document.getElementById(`simVal_${i}`).innerText = courses[i].simExam !== null ? courses[i].simExam : '--';
             const fS = calculateCourseFinal(courses[i], true);
             
-            // קונפטי בציון 90+ (סימולציה)
             if (parseFloat(fS) >= 90 && !celebratedCourses[i + '_sim']) {
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#6366f1', '#10b981'] });
                 celebratedCourses[i + '_sim'] = true;
@@ -284,7 +329,7 @@
         function updateChart(labels, data, colors, semStats) {
             const ctx = document.getElementById('gradeChart').getContext('2d');
             const chartData = currentChartType === 'bar' ? data : Object.keys(semStats).sort().map(s => semStats[s].cr > 0 ? (semStats[s].sum/semStats[s].cr).toFixed(2) : 0);
-            const chartLabels = currentChartType === 'bar' ? labels : Object.keys(semStats).sort().map(s => `סמ' ${s}`);
+            const chartLabels = currentChartType === 'bar' ? labels : Object.keys(semStats).sort().map(s => `סמ' ${getSemesterDisplayName(parseInt(s))}`);
             if (chart) {
                 chart.data.labels = chartLabels;
                 chart.data.datasets[0].data = chartData;
@@ -299,22 +344,40 @@
             }
         }
 
-        function updateAIAdvisor() {
-            const out = document.getElementById('aiTextOutput'), list = document.getElementById('retakeList'), totalCr = courses.reduce((s, c) => s + (c.isBinary ? 0 : parseFloat(c.credits) || 0), 0);
+       function updateAIAdvisor() {
+            const out = document.getElementById('aiTextOutput');
+            const list = document.getElementById('retakeList');
+            
+            const totalCr = courses.reduce((s, c) => s + (c.isBinary ? 0 : parseFloat(c.credits) || 0), 0);
             if (totalCr === 0) { out.innerText = "הזן ציונים כדי לקבל המלצות."; return; }
-            let insights = courses.filter(c => !c.isBinary).map(c => {
+            
+            let filteredCourses = courses.filter(c => !c.isBinary && shouldShowInChart(c));
+            
+            if (filteredCourses.length === 0) {
+                out.innerText = "אין קורסים רלוונטיים להמלצה בחתך שנבחר.";
+                list.innerHTML = '';
+                return;
+            }
+
+            let insights = filteredCourses.map(c => {
                 const cur = parseFloat(calculateCourseFinal(c, true));
                 const weight = (parseFloat(c.credits) || 0) / totalCr;
                 const impact10pts = (10 * weight).toFixed(2);
                 return { name: c.name, gain: (100 - cur) * weight, weight, impact10pts, isSim: c.simExam !== null };
             });
+            
             insights.sort((a, b) => b.gain - a.gain);
-            out.innerHTML = `ניתחתי את הנתונים שלך. הנה המבחנים הכי רווחיים לממוצע הכללי:`;
+            
+            const scopeSelect = document.getElementById('scopeFilter');
+            const scopeName = scopeSelect.options[scopeSelect.selectedIndex].text;
+            
+            out.innerHTML = `ניתחתי את הציונים עבור <b>${scopeName}</b>. הנה המבחנים שהכי כדאי לשפר כדי להקפיץ את הממוצע הכללי:`;
+            
             list.innerHTML = '';
             insights.slice(0, 3).forEach((ins, i) => {
                 if (ins.gain <= 0.01) return;
                 const cols = ['purple', 'blue', 'indigo'];
-                list.innerHTML += `<div class="bg-white dark:bg-slate-800 p-2 rounded border-r-4 border-${cols[i]}-500 shadow-sm"><div class="flex justify-between font-bold text-[10px]"><span>${ins.name}</span><span class="text-green-500">+${ins.gain.toFixed(2)} לממוצע</span></div><p class="text-[9px] text-slate-400">כל 10 נקודות שתשפר פה שוות <b>${ins.impact10pts}</b> בממוצע הכללי.</p></div>`;
+                list.innerHTML += `<div class="bg-white dark:bg-slate-800 p-2 rounded border-r-4 border-${cols[i]}-500 shadow-sm"><div class="flex justify-between font-bold text-[10px]"><span>${ins.name}</span><span class="text-green-500">+${ins.gain.toFixed(2)} לממוצע הכללי</span></div><p class="text-[9px] text-slate-400">כל 10 נקודות שתשפר פה שוות <b>${ins.impact10pts}</b> בממוצע הכללי.</p></div>`;
             });
         }
 
@@ -324,20 +387,70 @@
         function updateModalResults() { let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { let gIn = r.querySelector('.sub-grade'), wIn = r.querySelector('.sub-weight'); if (parseFloat(gIn.value) > 100) gIn.value = 100; if (parseFloat(wIn.value) > 100) wIn.value = 100; let g = parseFloat(gIn.value)||0, w = parseFloat(wIn.value)||0; if(w>0){tw+=w; ws+=(g*w);} }); document.getElementById('modalTotalWeight').innerText = tw.toFixed(1) + '%'; document.getElementById('modalFinalGrade').innerText = tw > 0 ? (ws/tw).toFixed(2) : "0"; }
         function applySubCalc() { if (!activeCalcContext) return; let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { let g = parseFloat(r.querySelector('.sub-grade').value)||0, w = parseFloat(r.querySelector('.sub-weight').value)||0; if(w>0){tw+=w; ws+=(g*w);} }); const { index, type } = activeCalcContext; const newWeight = Math.min(100, tw); if (type === 'work') { courses[index].work = (ws/tw)||0; courses[index].weights.work = newWeight; if (newWeight + courses[index].weights.quiz > 100) courses[index].weights.quiz = 100 - newWeight; } else { courses[index].quiz = (ws/tw)||0; courses[index].weights.quiz = newWeight; if (newWeight + courses[index].weights.work > 100) courses[index].weights.work = 100 - newWeight; } saveData(); renderAll(); calculateAll(); closeSubCalc(); }
         function updateMagenBadges(i) { const c=courses[i], el=document.getElementById(`magenBox_${i}`); if(!el)return; const ex=c.simExam!==null?c.simExam:c.exam; let h=''; if(c.workMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.work)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">עב' ${parseFloat(c.work)<parseFloat(ex)?'🛡️':'✅'}</span>`; if(c.quizMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.quiz)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">בחן ${parseFloat(c.quiz)<parseFloat(ex)?'🛡️':'✅'}</span>`; el.innerHTML=h; }
-        function setChartType(t) { currentChartType = t; ['bar', 'line', 'ai'].forEach(id => document.getElementById(`btn-${id}`).classList.toggle('active-tab', id === t)); document.getElementById('gradeChart').style.display = t === 'ai' ? 'none' : 'block'; document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai'); document.getElementById('filterContainer').style.visibility = t === 'ai' ? 'hidden' : 'visible'; if(chart){chart.destroy(); chart=null;} calculateAll(); }
+        
+        function setChartType(t) { 
+            currentChartType = t; 
+            ['bar', 'line', 'ai'].forEach(id => document.getElementById(`btn-${id}`).classList.toggle('active-tab', id === t)); 
+            document.getElementById('gradeChart').style.display = t === 'ai' ? 'none' : 'block'; 
+            document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai'); 
+            
+            if(chart){chart.destroy(); chart=null;} 
+            calculateAll(); 
+        }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); calculateAll(); }
         function enforceMax(el) { if (parseFloat(el.value) > 100) el.value = 100; if (parseFloat(el.value) < 0) el.value = 0; }
         function saveData() { localStorage.setItem('harelGradesV11_2', JSON.stringify(courses)); }
-        function updateFilterOptions() { const s=document.getElementById('scopeFilter'), ms=courses.length>0?Math.max(...courses.map(c=>c.semester)):1; let h='<option value="all">כל התואר</option>'; for(let i=1;i<=Math.ceil(ms/2);i++)h+=`<option value="year_${i}">שנה ${['א','ב','ג','ד'][i-1]||i}</option>`; h+=`<option value="sem_${ms}">סמסטר אחרון (${ms})</option>`; s.innerHTML=h; }
-        function shouldShowInChart(c) { const f=document.getElementById('scopeFilter').value; if(f==='all')return true; if(f.startsWith('sem_'))return c.semester===parseInt(f.split('_')[1]); if(f.startsWith('year_')){const y=parseInt(f.split('_')[1]); return c.semester>=y*2-1 && c.semester<=y*2;} return true; }
+        
+        // מעודכן: פילטר שעובד נכון עם הלוגיקה של סמסטר קיץ
+        function updateFilterOptions() { 
+            const s = document.getElementById('scopeFilter');
+            const info = getSemesterDisplayInfo();
+            const sems = Object.keys(info).map(Number).sort((a,b) => a-b);
+            
+            if (sems.length === 0) {
+                s.innerHTML = '<option value="all">כל התואר</option>';
+                return;
+            }
+            
+            let maxYear = 1;
+            sems.forEach(sem => { if (info[sem].year > maxYear) maxYear = info[sem].year; });
+            
+            let h = '<option value="all">כל התואר</option>'; 
+            const letters = ['', 'א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ז\'', 'ח\''];
+            
+            for(let i = 1; i <= maxYear; i++) {
+                h += `<option value="year_${i}">שנה ${letters[i] || i}</option>`; 
+            }
+            
+            h += `<option disabled>──────────</option>`; 
+            
+            sems.forEach(sem => {
+                h += `<option value="sem_${sem}">סמסטר ${info[sem].name}</option>`;
+            });
+            
+            s.innerHTML = h; 
+        }
+        
+        // מעודכן: מסנן שיודע לשייך נכון את סמסטר הקיץ לשנה שלו
+        function shouldShowInChart(c) { 
+            const f = document.getElementById('scopeFilter').value; 
+            if(f === 'all') return true; 
+            if(f.startsWith('sem_')) return c.semester === parseInt(f.split('_')[1]); 
+            if(f.startsWith('year_')){
+                const y = parseInt(f.split('_')[1]); 
+                const info = getSemesterDisplayInfo();
+                return info[c.semester] && info[c.semester].year === y;
+            } 
+            return true; 
+        }
+        
         function getBarColor(g) { const n = parseFloat(g); return n >= 90 ? '#10b981' : (n >= 80 ? '#3b82f6' : (n >= 60 ? '#eab308' : '#ef4444')); }
         function finalColor(g) { const n = parseFloat(g); return n >= 90 ? 'text-emerald-500' : (n >= 80 ? 'text-blue-600' : (n >= 60 ? 'text-yellow-500' : 'text-red-500')); }
-        function startNewSemester() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 0; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms+1, credits: 3, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 60, isBinary: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
-        function addNewCourse() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 60, isBinary: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
+        function startNewSemester() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 0; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms+1, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
+        function addNewCourse() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
         function resetAllSimulations() { courses.forEach(c => c.simExam = null); renderAll(); calculateAll(); }
         function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(courses,null,2)],{type:"application/json"})); a.download=`Grades.json`; a.click(); }
         
-        // --- פונקציית טעינה (Import) מתוקנת ---
         function triggerImport() { document.getElementById('importFile').click(); }
         function importData(input) {
             const file = input.files[0]; if (!file) return;
@@ -365,7 +478,7 @@
             const w = document.getElementById('semesterWrapper'); w.innerHTML = '';
             const sems = [...new Set(courses.map(c => c.semester))].sort((a,b) => a-b);
             sems.forEach(s => {
-                w.innerHTML += `<div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-slate-100 dark:border-dark-border overflow-hidden"><div class="p-4 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between cursor-pointer" onclick="document.getElementById('semContainer_${s}').classList.toggle('hidden-content'); document.getElementById('semIcon_${s}').classList.toggle('rotate-180')"><div class="flex items-center gap-3"><i id="semIcon_${s}" class="fas fa-chevron-down text-slate-400 transition-transform"></i><h2 class="text-lg font-black text-slate-700 dark:text-slate-200">סמסטר ${s}</h2></div><div class="bg-white dark:bg-slate-700 px-3 py-1 rounded-full border border-slate-200 shadow-sm"><span id="semAvg_${s}" class="text-lg font-bold text-blue-600">0.00</span></div></div><div id="semContainer_${s}" class="p-4 space-y-4 border-t border-slate-100 dark:border-slate-700/50"></div></div>`;
+                w.innerHTML += `<div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-slate-100 dark:border-dark-border overflow-hidden"><div class="p-4 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between cursor-pointer" onclick="document.getElementById('semContainer_${s}').classList.toggle('hidden-content'); document.getElementById('semIcon_${s}').classList.toggle('rotate-180')"><div class="flex items-center gap-3"><i id="semIcon_${s}" class="fas fa-chevron-down text-slate-400 transition-transform"></i><h2 class="text-lg font-black text-slate-700 dark:text-slate-200">סמסטר ${getSemesterDisplayName(s)} ${isSemesterSummer(s)?'☀️':''}</h2></div><div class="bg-white dark:bg-slate-700 px-3 py-1 rounded-full border border-slate-200 shadow-sm"><span id="semAvg_${s}" class="text-lg font-bold text-blue-600">0.00</span></div></div><div id="semContainer_${s}" class="p-4 space-y-4 border-t border-slate-100 dark:border-slate-700/50"></div></div>`;
                 courses.forEach((c, i) => {
                     if (c.semester !== s) return;
                     const f = calculateCourseFinal(c, true); const isS = c.simExam !== null;
@@ -381,14 +494,22 @@
             const sems = [...new Set(courses.map(c => c.semester))].sort((a,b) => a-b);
             sems.forEach(s => {
                 const isc = collapsedSemesters[s];
-                tb.innerHTML += `<tr class="bg-slate-100 dark:bg-slate-700 cursor-pointer font-bold" onclick="collapsedSemesters[${s}]=!collapsedSemesters[${s}]; renderTable();"><td colspan="9" class="p-1.5 pr-4 text-xs"><i class="fas fa-chevron-up text-[8px] transition-transform ${isc?'rotate-180':''}"></i> סמסטר ${s}</td></tr>`;
+                tb.innerHTML += `<tr class="bg-slate-100 dark:bg-slate-700 font-bold">
+                    <td colspan="9" class="p-1.5 pr-4 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="cursor-pointer flex-1" onclick="collapsedSemesters[${s}]=!collapsedSemesters[${s}]; renderTable();"><i class="fas fa-chevron-up text-[8px] transition-transform ${isc?'rotate-180':''}"></i> סמסטר ${getSemesterDisplayName(s)}</span>
+                            <span class="font-normal bg-white dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-[9px] cursor-pointer"><label class="cursor-pointer flex items-center gap-1"><input type="checkbox" class="cursor-pointer" onchange="toggleSummerSemester(${s})" ${isSemesterSummer(s)?'checked':''}> סמסטר קיץ ☀️</label></span>
+                        </div>
+                    </td>
+                </tr>`;
+                
                 if (!isc) {
                     courses.forEach((c, i) => {
                         if (c.semester !== s) return;
                         const bin = c.isBinary;
                         tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-700">
                             <td class="p-1"><input type="text" value="${c.name}" onchange="updateData(${i},'name',this.value)" class="input-minimal text-right w-20"></td>
-                            <td class="p-1 text-center"><input type="checkbox" onchange="updateData(${i},'isBinary')" ${bin?'checked':''} class="w-3 h-3 cursor-pointer"></td>
+                            <td class="p-1 text-center"><input type="checkbox" onchange="updateData(${i},'isBinary')" ${bin?'checked':''} class="w-3 h-3 cursor-pointer" title="קורס עובר/לא עובר"></td>
                             <td class="p-1"><input type="number" value="${c.semester}" onchange="updateData(${i},'semester',this.value)" class="input-minimal w-10 text-center"></td>
                             <td class="p-1"><input type="number" value="${c.credits}" onchange="updateData(${i},'credits',this.value, null, this)" class="input-minimal w-10 text-center"></td>
                             <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.work)}" onchange="updateData(${i},'work',this.value, null, this)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'work')" class="text-[9px] text-slate-400 hover:text-blue-500"><i class="fas fa-calculator"></i></button></div></td>
@@ -405,5 +526,3 @@
     </script>
 </body>
 </html>
-
-
