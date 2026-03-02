@@ -14,7 +14,7 @@
     
     <title>מחשבון ציונים לאוניברסיטה | חישוב ממוצע תואר בקלות</title>
 
-    <meta name="description" content="מחשבון ציונים לסטודנטים בבן גוריון ובכל הארץ. כלי חינמי לחישוב ממוצע סמסטריאלי, שנתי ומצטבר לתואר.">
+    <meta name="description" content="מחשבון ציונים לסטודנטים. כלי לחישוב ממוצע סמסטריאלי, שנתי ומצטבר לתואר.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -53,7 +53,7 @@
         }
 
         @media print {
-            .no-print, button, input[type=range], #subCalcModal, #aiAdvisorContent, #gradeChart, #filterContainer { display: none !important; }
+            .no-print, button, input[type=range], #subCalcModal, #aiAdvisorContent, #gradeChart, #filterContainer, #summaryTableContent { display: none !important; }
             body { background: white; color: black; }
             .xl\:col-span-5 { display: none; }
             .xl\:col-span-7 { width: 100%; grid-column: span 12; }
@@ -111,9 +111,10 @@
                             <div class="flex justify-between items-center">
                                 <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm flex items-center"><i class="fas fa-chart-pie text-purple-500 ml-2"></i>מרכז ניתוח</h3>
                                 <div class="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1 gap-1 no-print">
-                                    <button onclick="setChartType('bar')" id="btn-bar" class="text-xs px-3 py-1 rounded-md transition active-tab"><i class="fas fa-chart-bar"></i></button>
-                                    <button onclick="setChartType('line')" id="btn-line" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700"><i class="fas fa-chart-line"></i></button>
-                                    <button onclick="setChartType('ai')" id="btn-ai" class="text-xs px-3 py-1 rounded-md transition hover:bg-white text-purple-500 font-bold"><i class="fas fa-robot"></i></button>
+                                    <button onclick="setChartType('bar')" id="btn-bar" class="text-xs px-3 py-1 rounded-md transition active-tab" title="גרף עמודות"><i class="fas fa-chart-bar"></i></button>
+                                    <button onclick="setChartType('line')" id="btn-line" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700" title="מגמה לאורך זמן"><i class="fas fa-chart-line"></i></button>
+                                    <button onclick="setChartType('ai')" id="btn-ai" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700 text-purple-500 font-bold" title="יועץ חכם"><i class="fas fa-robot"></i></button>
+                                    <button onclick="setChartType('table')" id="btn-table" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700 text-blue-500" title="טבלת סיכום"><i class="fas fa-table"></i></button>
                                 </div>
                             </div>
                             <div id="filterContainer" class="no-print">
@@ -133,6 +134,29 @@
                                     </div>
                                 </div>
                                 <div id="retakeList" class="space-y-2"></div>
+                            </div>
+                            <div id="summaryTableContent" class="absolute inset-0 hidden flex flex-col bg-white dark:bg-dark-card rounded-xl border border-slate-100 dark:border-dark-border z-10 overflow-hidden">
+                                <div class="overflow-y-auto flex-1">
+                                    <table class="w-full text-right border-collapse">
+                                        <thead class="bg-slate-50 dark:bg-slate-800 sticky top-0 shadow-sm z-20">
+                                            <tr class="text-[10px] text-slate-500 uppercase tracking-wider">
+                                                <th class="p-2 font-bold cursor-pointer hover:text-blue-600 transition" onclick="handleTableSort('name')">קורס <i id="sortIcon_name" class="fas fa-sort ml-1"></i></th>
+                                                <th class="p-2 font-bold cursor-pointer hover:text-blue-600 transition text-center" onclick="handleTableSort('semesterNum')">סמ' <i id="sortIcon_semesterNum" class="fas fa-sort ml-1"></i></th>
+                                                <th class="p-2 font-bold cursor-pointer hover:text-blue-600 transition text-center" onclick="handleTableSort('credits')">נק"ז <i id="sortIcon_credits" class="fas fa-sort ml-1"></i></th>
+                                                <th class="p-2 font-bold cursor-pointer hover:text-blue-600 transition text-center" onclick="handleTableSort('finalGrade')">ציון <i id="sortIcon_finalGrade" class="fas fa-sort ml-1"></i></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="summaryTableTbody">
+                                            </tbody>
+                                    </table>
+                                </div>
+                                <div class="bg-blue-50/50 dark:bg-slate-800 p-2 border-t border-blue-100 dark:border-slate-700 text-[11px] font-bold flex justify-between items-center no-print">
+                                    <span class="text-blue-800 dark:text-blue-200">סיכום מסונן:</span>
+                                    <div class="flex gap-4">
+                                        <span class="text-slate-600 dark:text-slate-300">נק"ז: <span id="summaryTableTotalCr" class="text-blue-600 dark:text-blue-400">0</span></span>
+                                        <span class="text-slate-600 dark:text-slate-300">ממוצע: <span id="summaryTableAvg" class="text-blue-600 dark:text-blue-400">0.00</span></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -184,6 +208,7 @@
         
         let collapsedSemesters = {}; let chart = null; let currentChartType = 'bar'; let activeCalcContext = null;
         let celebratedCourses = {};
+        let tableSortBy = 'semesterNum'; let tableSortDesc = false; // משתנים למצב המיון בטבלה
 
         // פונקציות עזר לבדיקת סמסטר קיץ ומיפוי שמות/שנים
         function isSemesterSummer(s) { 
@@ -196,7 +221,6 @@
             saveData(); updateFilterOptions(); renderAll(); calculateAll(); 
         }
 
-        // המוח החדש והחכם שמחשב דינמית את שמות הסמסטרים והשנים שלהם
         function getSemesterDisplayInfo() {
             const sems = [...new Set(courses.map(c => c.semester))].sort((a,b) => a-b);
             let info = {};
@@ -215,7 +239,7 @@
                     };
                 } else {
                     let yearNum = Math.ceil(regularCount / 2);
-                    if (yearNum === 0) yearNum = 1; // למקרה שסמסטר קיץ נבחר לפני שבכלל היה סמסטר רגיל
+                    if (yearNum === 0) yearNum = 1;
                     info[s] = {
                         name: `קיץ שנה ${letters[yearNum] || yearNum}`,
                         year: yearNum,
@@ -274,7 +298,100 @@
             document.getElementById('resetSimBtn').classList.toggle('hidden', !isS);
             for (const [s, st] of Object.entries(semStats)) { const el = document.getElementById(`semAvg_${s}`); if (el) el.innerText = st.cr > 0 ? (st.sum / st.cr).toFixed(2) : "0.00"; }
             calculateTarget();
-            if (currentChartType === 'ai') updateAIAdvisor(); else updateChart(labels, data, colors, semStats);
+            
+            if (currentChartType === 'ai') updateAIAdvisor(); 
+            else if (currentChartType === 'table') renderSummaryTable();
+            else updateChart(labels, data, colors, semStats);
+        }
+
+        // פונקציות לטבלת הסיכום החדשה
+        function handleTableSort(col) {
+            if (tableSortBy === col) {
+                tableSortDesc = !tableSortDesc;
+            } else {
+                tableSortBy = col;
+                tableSortDesc = (col === 'finalGrade'); // בציונים עדיף שברירת המחדל תהיה מהגבוה לנמוך
+            }
+            renderSummaryTable();
+        }
+
+        function renderSummaryTable() {
+            const container = document.getElementById('summaryTableTbody');
+            if (!container) return;
+
+            let filteredCourses = courses.filter(c => shouldShowInChart(c));
+
+            let mapped = filteredCourses.map(c => {
+                let fStr = calculateCourseFinal(c, true);
+                let f = c.isBinary ? -1 : parseFloat(fStr);
+                return {
+                    id: c.id,
+                    name: c.name,
+                    semesterNum: c.semester,
+                    semesterDisplay: getSemesterDisplayName(c.semester),
+                    credits: parseFloat(c.credits) || 0,
+                    isBinary: c.isBinary,
+                    finalGrade: f,
+                    finalGradeDisplay: fStr
+                };
+            });
+
+            // מיון הנתונים
+            mapped.sort((a, b) => {
+                let valA = a[tableSortBy];
+                let valB = b[tableSortBy];
+                
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return tableSortDesc ? valB.localeCompare(valA, 'he') : valA.localeCompare(valB, 'he');
+                }
+
+                if (valA < valB) return tableSortDesc ? 1 : -1;
+                if (valA > valB) return tableSortDesc ? -1 : 1;
+                return 0;
+            });
+
+            let html = '';
+            let totalCr = 0, totalGradeSum = 0, totalGradeCr = 0;
+
+            mapped.forEach(c => {
+                totalCr += c.credits;
+                if (!c.isBinary) {
+                    totalGradeSum += c.finalGrade * c.credits;
+                    totalGradeCr += c.credits;
+                }
+
+                let gradeHtml = c.isBinary ? 
+                    '<span class="text-green-500 font-bold text-[10px]"><i class="fas fa-check"></i> עובר</span>' :
+                    `<span class="font-bold ${finalColor(c.finalGrade)}">${c.finalGrade}</span>`;
+
+                html += `
+                <tr class="hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-700/50 text-[11px] even:bg-slate-50/50 dark:even:bg-slate-800/30">
+                    <td class="p-2 font-medium text-slate-700 dark:text-slate-300 truncate max-w-[120px]" title="${c.name}">${c.name}</td>
+                    <td class="p-2 text-center text-slate-500 dark:text-slate-400">${c.semesterDisplay}</td>
+                    <td class="p-2 text-center text-slate-500 dark:text-slate-400">${c.credits}</td>
+                    <td class="p-2 text-center">${gradeHtml}</td>
+                </tr>
+                `;
+            });
+
+            let avg = totalGradeCr > 0 ? (totalGradeSum / totalGradeCr).toFixed(2) : '0.00';
+            container.innerHTML = html;
+            
+            const totalCrEl = document.getElementById('summaryTableTotalCr');
+            const avgEl = document.getElementById('summaryTableAvg');
+            if(totalCrEl) totalCrEl.innerText = totalCr;
+            if(avgEl) avgEl.innerText = avg;
+
+            // עדכון אייקוני המיון בכותרות
+            ['name', 'semesterNum', 'credits', 'finalGrade'].forEach(col => {
+                let el = document.getElementById(`sortIcon_${col}`);
+                if (el) {
+                    el.className = 'fas fa-sort text-slate-300 dark:text-slate-600 text-[10px] opacity-50 ml-1 transition-colors';
+                    if (tableSortBy === col) {
+                        el.className = tableSortDesc ? 'fas fa-sort-down text-blue-500 text-[10px] ml-1' : 'fas fa-sort-up text-blue-500 text-[10px] ml-1';
+                    }
+                }
+            });
         }
 
         function updateExamLive(i, val) { 
@@ -390,9 +507,16 @@
         
         function setChartType(t) { 
             currentChartType = t; 
-            ['bar', 'line', 'ai'].forEach(id => document.getElementById(`btn-${id}`).classList.toggle('active-tab', id === t)); 
-            document.getElementById('gradeChart').style.display = t === 'ai' ? 'none' : 'block'; 
+            ['bar', 'line', 'ai', 'table'].forEach(id => {
+                const btn = document.getElementById(`btn-${id}`);
+                if(btn) btn.classList.toggle('active-tab', id === t);
+            }); 
+            
+            document.getElementById('gradeChart').style.display = (t === 'ai' || t === 'table') ? 'none' : 'block'; 
             document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai'); 
+            
+            const tableContent = document.getElementById('summaryTableContent');
+            if (tableContent) tableContent.classList.toggle('hidden', t !== 'table');
             
             if(chart){chart.destroy(); chart=null;} 
             calculateAll(); 
@@ -401,7 +525,6 @@
         function enforceMax(el) { if (parseFloat(el.value) > 100) el.value = 100; if (parseFloat(el.value) < 0) el.value = 0; }
         function saveData() { localStorage.setItem('harelGradesV11_2', JSON.stringify(courses)); }
         
-        // מעודכן: פילטר שעובד נכון עם הלוגיקה של סמסטר קיץ
         function updateFilterOptions() { 
             const s = document.getElementById('scopeFilter');
             const info = getSemesterDisplayInfo();
@@ -431,7 +554,6 @@
             s.innerHTML = h; 
         }
         
-        // מעודכן: מסנן שיודע לשייך נכון את סמסטר הקיץ לשנה שלו
         function shouldShowInChart(c) { 
             const f = document.getElementById('scopeFilter').value; 
             if(f === 'all') return true; 
