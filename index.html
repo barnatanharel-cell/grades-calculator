@@ -74,19 +74,19 @@
                 </div>
             </div>
 
-            <div class="flex flex-col md:flex-row gap-4 items-center bg-indigo-50 dark:bg-slate-700/50 p-3 rounded-xl border border-indigo-100 dark:border-slate-600 w-full xl:w-auto no-print">
-                <div class="flex items-center gap-3">
-                    <div class="text-right">
-                        <span class="text-[10px] font-bold text-indigo-500 uppercase block">יעד ממוצע</span>
-                        <input type="number" id="targetInput" placeholder="85" min="0" max="100" oninput="enforceMax(this); calculateAll()" class="w-16 bg-white dark:bg-slate-800 border border-indigo-200 rounded px-1 text-center font-bold text-indigo-700 outline-none">
+            <form id="suggestionForm" action="https://formspree.io/f/mgolbgdg" method="POST" onsubmit="handleSuggestionSubmit(event)" class="flex flex-col md:flex-row gap-3 items-center bg-indigo-50 dark:bg-slate-700/50 p-2 md:p-3 rounded-xl border border-indigo-100 dark:border-slate-600 w-full xl:w-auto shadow-sm no-print">
+                <div class="flex items-center gap-3 w-full">
+                    <div class="text-right flex-1">
+                        <span class="text-[10px] font-bold text-indigo-500 uppercase block pl-1">יש לך רעיון לאתר?</span>
+                        <input type="text" name="message" placeholder="הצעות, באגים, מחמאות..." required class="w-full sm:w-56 text-sm bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-500 rounded px-2 py-1 font-medium text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all">
                     </div>
-                    <div class="h-8 w-px bg-indigo-200"></div>
-                    <div>
-                        <div id="targetResult" class="text-lg font-bold text-indigo-900 dark:text-indigo-200 leading-none">---</div>
-                        <div class="text-[10px] text-indigo-400">נדרש במבחנים</div>
-                    </div>
+                    <div class="h-8 w-px bg-indigo-200 dark:bg-slate-600 hidden sm:block"></div>
+                    <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg px-3 py-1.5 font-bold text-sm transition-colors flex items-center gap-2">
+                        <span>שלח</span>
+                        <i class="fas fa-paper-plane text-xs"></i>
+                    </button>
                 </div>
-            </div>
+            </form>
             
             <div class="flex items-center gap-6">
                 <button onclick="toggleTheme()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition no-print"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button>
@@ -200,7 +200,6 @@
         ];
         let courses = JSON.parse(localStorage.getItem('harelGradesV11_2')) || JSON.parse(JSON.stringify(defaultData));
         
-        // הגנה על נתונים של משתמשים קיימים
         courses.forEach(c => { 
             if(c.simExam === undefined) c.simExam = null; 
             if(c.isSummer === undefined) c.isSummer = false; 
@@ -208,9 +207,8 @@
         
         let collapsedSemesters = {}; let chart = null; let currentChartType = 'bar'; let activeCalcContext = null;
         let celebratedCourses = {};
-        let tableSortBy = 'semesterNum'; let tableSortDesc = false; // משתנים למצב המיון בטבלה
+        let tableSortBy = 'semesterNum'; let tableSortDesc = false; 
 
-        // פונקציות עזר לבדיקת סמסטר קיץ ומיפוי שמות/שנים
         function isSemesterSummer(s) { 
             return courses.some(c => c.semester === s && c.isSummer); 
         }
@@ -304,13 +302,12 @@
             else updateChart(labels, data, colors, semStats);
         }
 
-        // פונקציות לטבלת הסיכום החדשה
         function handleTableSort(col) {
             if (tableSortBy === col) {
                 tableSortDesc = !tableSortDesc;
             } else {
                 tableSortBy = col;
-                tableSortDesc = (col === 'finalGrade'); // בציונים עדיף שברירת המחדל תהיה מהגבוה לנמוך
+                tableSortDesc = (col === 'finalGrade'); 
             }
             renderSummaryTable();
         }
@@ -336,7 +333,6 @@
                 };
             });
 
-            // מיון הנתונים
             mapped.sort((a, b) => {
                 let valA = a[tableSortBy];
                 let valB = b[tableSortBy];
@@ -382,7 +378,6 @@
             if(totalCrEl) totalCrEl.innerText = totalCr;
             if(avgEl) avgEl.innerText = avg;
 
-            // עדכון אייקוני המיון בכותרות
             ['name', 'semesterNum', 'credits', 'finalGrade'].forEach(col => {
                 let el = document.getElementById(`sortIcon_${col}`);
                 if (el) {
@@ -594,7 +589,24 @@
         function resetDefaults() { if(confirm("לאפס?")) { courses = JSON.parse(JSON.stringify(defaultData)); saveData(); renderAll(); calculateAll(); } }
         function toggleMagen(i, type) { if(type==='work') courses[i].workMagen = !courses[i].workMagen; else courses[i].quizMagen = !courses[i].quizMagen; saveData(); renderAll(); calculateAll(); }
 
-        function calculateTarget() { const t = Math.min(100, parseFloat(document.getElementById('targetInput').value)); const res = document.getElementById('targetResult'); if(!t){res.innerText="---"; return;} let tc=0, cp=0, tewc=0; courses.forEach(c=>{ if(c.isBinary) return; const cr=parseFloat(c.credits)||0; tc+=cr; const ew=Math.max(0, 100-(c.weights.work||0)-(c.weights.quiz||0)); cp+=((c.work||0)*(c.weights.work||0)/100+(c.quiz||0)*(c.weights.quiz||0)/100)*cr; tewc+=cr*(ew/100); }); if(tc===0||tewc<=0)return; const n=Math.ceil(((t*tc)-cp)/tewc); res.innerHTML=n>100?`<span class="text-red-500">${n} 😱</span>`:(n<0?`<span class="text-green-500">עברת!</span>`:n); }
+        function calculateTarget() { 
+            const inputEl = document.getElementById('targetInput');
+            const res = document.getElementById('targetResult');
+            if (!inputEl || !res) return; 
+
+            const t = Math.min(100, parseFloat(inputEl.value)); 
+            if(!t){res.innerText="---"; return;} 
+            let tc=0, cp=0, tewc=0; 
+            courses.forEach(c=>{ 
+                if(c.isBinary) return; 
+                const cr=parseFloat(c.credits)||0; tc+=cr; 
+                const ew=Math.max(0, 100-(c.weights.work||0)-(c.weights.quiz||0)); 
+                cp+=((c.work||0)*(c.weights.work||0)/100+(c.quiz||0)*(c.weights.quiz||0)/100)*cr; tewc+=cr*(ew/100); 
+            }); 
+            if(tc===0||tewc<=0)return; 
+            const n=Math.ceil(((t*tc)-cp)/tewc); 
+            res.innerHTML=n>100?`<span class="text-red-500">${n} 😱</span>`:(n<0?`<span class="text-green-500">עברת!</span>`:n); 
+        }
 
         function renderAll() {
             const w = document.getElementById('semesterWrapper'); w.innerHTML = '';
@@ -644,6 +656,35 @@
                 }
             });
         }
+        
+        function handleSuggestionSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const btn = form.querySelector('button[type="submit"]');
+            const originalContent = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin text-white"></i>';
+            btn.disabled = true;
+
+            fetch(form.action, {
+                method: form.method,
+                body: new FormData(form),
+                headers: { 'Accept': 'application/json' }
+            }).then(response => {
+                if (response.ok) {
+                    alert('ההצעה נשלחה בהצלחה! תודה רבה.');
+                    form.reset();
+                } else {
+                    alert('אופס, הייתה בעיה בשליחה. נסה שוב מאוחר יותר.');
+                }
+            }).catch(error => {
+                alert('שגיאת רשת. בדוק את החיבור שלך.');
+            }).finally(() => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            });
+        }
+
         init();
     </script>
 </body>
