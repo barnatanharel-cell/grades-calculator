@@ -43,17 +43,18 @@
         .magen-badge { white-space: nowrap; min-width: max-content; }
         .ai-pulse { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .modal-overlay { background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); }
+        .animate-pop { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 
        @media (min-width: 1280px) {
             .sticky-sidebar { 
-                position: sticky; 
-                top: 110px; 
-                padding-left: 4px; 
+                position: sticky; top: 110px; padding-left: 4px; 
             }
         }
 
         @media print {
-            .no-print, button, input[type=range], #subCalcModal, #aiAdvisorContent, #gradeChart, #filterContainer, #summaryTableContent { display: none !important; }
+            .no-print, button, input[type=range], #subCalcModal, #helpModal, #aiAdvisorContent, #gradeChart, #filterContainer, #summaryTableContent { display: none !important; }
             body { background: white; color: black; }
             .xl\:col-span-5 { display: none; }
             .xl\:col-span-7 { width: 100%; grid-column: span 12; }
@@ -88,9 +89,13 @@
                 </div>
             </form>
             
-            <div class="flex items-center gap-6">
-                <button onclick="toggleTheme()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition no-print"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button>
-                <div class="text-right">
+            <div class="flex items-center gap-4">
+                <button onclick="openHelpModal()" class="flex items-center gap-2 p-2 px-4 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:scale-105 transition shadow-sm no-print" title="הסבר על פונקציות האתר">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="hidden sm:inline text-xs font-bold">הסבר על פונקציות האתר</span>
+                </button>
+                <button onclick="toggleTheme()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition no-print" title="מצב לילה/יום"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button>
+                <div class="text-right ml-2 border-r border-slate-200 dark:border-slate-700 pr-4">
                     <div class="text-xs text-slate-400 font-bold uppercase">ממוצע כולל</div>
                     <div id="totalAverage" class="text-5xl font-black text-blue-600 leading-none">00.00</div>
                     <div class="text-xs text-slate-400 mt-1">סה"כ נק"ז: <span id="totalCredits">0</span></div>
@@ -147,7 +152,7 @@
                                             </tr>
                                         </thead>
                                         <tbody id="summaryTableTbody">
-                                            </tbody>
+                                        </tbody>
                                     </table>
                                 </div>
                                 <div class="bg-blue-50/50 dark:bg-slate-800 p-2 border-t border-blue-100 dark:border-slate-700 text-[11px] font-bold flex justify-between items-center no-print">
@@ -161,20 +166,38 @@
                         </div>
                     </div>
 
+                    <div class="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-slate-200 dark:border-dark-border overflow-hidden flex flex-col no-print mb-6">
+                        <div class="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 flex justify-between items-center">
+                            <h2 class="font-bold text-slate-700 dark:text-slate-200 text-sm flex items-center"><i class="fas fa-bullseye text-red-500 ml-2"></i> יעד </h2>
+                            <input type="number" id="targetInput" value="88" oninput="calculateTarget()" class="w-16 text-center text-sm font-bold border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white outline-none focus:border-blue-500 transition-colors" title="הגדר יעד ממוצע">
+                        </div>
+                        <div class="p-5 space-y-4">
+                            <div class="flex justify-between items-end">
+                                <div class="text-xs text-slate-500 dark:text-slate-400 font-bold">ממוצע נוכחי בסימולציה</div>
+                                <div id="targetSimCurrent" class="text-3xl font-black text-blue-600">00.00</div>
+                            </div>
+                            <div class="relative w-full h-4 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden border border-slate-200 dark:border-slate-600 flex-row-reverse">
+                                <div id="targetProgressBar" class="absolute top-0 right-0 h-full bg-gradient-to-l from-blue-500 to-indigo-400 transition-all duration-500" style="width: 0%;"></div>
+                                <div id="targetMarker" class="absolute top-0 bottom-0 w-1 bg-red-500 z-10 transition-all duration-500" style="right: 88%;"></div>
+                            </div>
+                            <div id="targetResult" class="text-center text-xs font-bold text-slate-500 dark:text-slate-400 mt-2"></div>
+                        </div>
+                    </div>
+
                     <div class="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-slate-200 dark:border-dark-border overflow-hidden flex flex-col no-print">
                         <div class="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 flex justify-between items-center">
                             <h2 class="font-bold text-slate-700 dark:text-slate-200 text-sm">עריכת נתונים</h2>
                             <div class="flex gap-2">
                                 <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(this)">
-                                <button onclick="exportData()" title="גיבוי"><i class="fas fa-download text-slate-400"></i></button>
-                                <button onclick="triggerImport()" title="טעינה"><i class="fas fa-upload text-slate-400"></i></button>
-                                <button onclick="resetDefaults()" title="איפוס"><i class="fas fa-trash-alt text-slate-400 hover:text-red-500"></i></button>
+                                <button onclick="exportData()" title="גיבוי נתונים"><i class="fas fa-download text-slate-400 hover:text-blue-500 transition"></i></button>
+                                <button onclick="triggerImport()" title="טעינת נתונים"><i class="fas fa-upload text-slate-400 hover:text-blue-500 transition"></i></button>
+                                <button onclick="resetDefaults()" title="איפוס הכל"><i class="fas fa-trash-alt text-slate-400 hover:text-red-500 transition"></i></button>
                             </div>
                         </div>
                         <div class="overflow-x-auto p-1">
                             <table class="w-full text-[11px] border-collapse">
                                 <thead class="text-[9px] text-slate-400 uppercase sticky top-0 bg-white dark:bg-dark-card z-10">
-                                    <tr><th class="p-2 text-right">קורס</th><th class="p-1">בינארי</th><th class="p-1">סמ'</th><th class="p-1">נק"ז</th><th class="p-1">עב'</th><th class="p-1">בחן</th><th class="p-1 text-orange-500">%ע</th><th class="p-1 text-orange-500">%ב</th><th class="p-1"></th></tr>
+                                    <tr><th class="p-2 text-right">קורס</th><th class="p-1" title="קורס בינארי (עובר/לא עובר)">בינארי</th><th class="p-1">סמ'</th><th class="p-1">נק"ז</th><th class="p-1">עב'</th><th class="p-1">בחן</th><th class="p-1 text-orange-500">%ע</th><th class="p-1 text-orange-500">%ב</th><th class="p-1"></th></tr>
                                 </thead>
                                 <tbody id="settingsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
                             </table>
@@ -188,7 +211,60 @@
         </div>
     </div>
 
-    <div id="subCalcModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4"><div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-pop"><div class="p-4 bg-blue-600 text-white flex justify-between items-center"><h3 class="font-bold flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון <span id="modalTitleSuffix"></span></h3><button onclick="closeSubCalc()" class="text-white"><i class="fas fa-times"></i></button></div><div class="p-4 space-y-3 max-h-[50vh] overflow-y-auto" id="modalRows"></div><div class="p-4 bg-slate-50 dark:bg-slate-800 space-y-3 border-t"><div class="flex justify-between text-xs font-bold"><span>משקל בקורס:</span><span id="modalTotalWeight" class="text-orange-500">0%</span></div><div class="flex justify-between text-lg font-black"><span>ציון משוקלל:</span><span id="modalFinalGrade" class="text-blue-600">0</span></div><div class="grid grid-cols-2 gap-3 mt-4"><button onclick="addSubCalcRow()" class="py-2 border border-blue-600 text-blue-600 rounded-xl font-bold text-xs">הוסף מטלה</button><button onclick="applySubCalc()" class="py-2 bg-blue-600 text-white rounded-xl font-bold text-xs">עדכן נתונים</button></div></div></div></div>
+    <div id="subCalcModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4"><div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-pop"><div class="p-4 bg-blue-600 text-white flex justify-between items-center"><h3 class="font-bold flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון <span id="modalTitleSuffix"></span></h3><button onclick="closeSubCalc()" class="text-white hover:text-blue-200"><i class="fas fa-times"></i></button></div><div class="p-4 space-y-3 max-h-[50vh] overflow-y-auto" id="modalRows"></div><div class="p-4 bg-slate-50 dark:bg-slate-800 space-y-3 border-t"><div class="flex justify-between text-xs font-bold"><span>משקל מתוך הקורס:</span><span id="modalTotalWeight" class="text-orange-500">0%</span></div><div class="flex justify-between text-lg font-black"><span>ציון משוקלל:</span><span id="modalFinalGrade" class="text-blue-600">0</span></div><div class="grid grid-cols-2 gap-3 mt-4"><button onclick="addSubCalcRow()" class="py-2 border border-blue-600 text-blue-600 rounded-xl font-bold text-xs hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">הוסף מטלה</button><button onclick="applySubCalc()" class="py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition">עדכן נתונים</button></div></div></div></div>
+
+    <div id="helpModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4">
+        <div class="bg-white dark:bg-dark-card w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-pop flex flex-col max-h-[90vh]">
+            <div class="p-4 bg-indigo-600 text-white flex justify-between items-center">
+                <h3 class="font-bold flex items-center gap-2 text-lg"><i class="fas fa-book"></i> הסבר על פונקציות האתר</h3>
+                <button onclick="closeHelpModal()" class="text-white hover:text-indigo-200 transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                
+                <section>
+                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2"><i class="fas fa-sliders-h"></i> ציוני סימולציה (מה אם?)</h4>
+                    <p>בכל קורס יופיעו שני סליידרים. העליון (תכלת) הוא ציון המבחן <strong>האמיתי</strong> שלך. התחתון (סגול) הוא כלי סימולציה שמאפשר לך לבדוק "מה אם אקבל ציון מסוים במבחן?". משחק עם הסליידר הסגול יעדכן מיד את הציון הסופי של הקורס, את הממוצע הכללי למעלה, ואת מד יעד הרקטור בצד.</p>
+                </section>
+
+                <hr class="border-slate-100 dark:border-slate-700">
+
+                <section>
+                    <h4 class="font-bold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון עבודות ובחנים</h4>
+                    <p>בטבלת "עריכת נתונים", ליד העמודות של ציוני העבודות (עב') והבחנים (בחן), ישנו סמל של מחשבון <i class="fas fa-calculator text-blue-500"></i>. לחיצה עליו תפתח חלון בו תוכל להזין מספר עבודות עם המשקל הפנימי של כל אחת. המערכת תשקלל אותן אוטומטית לציון אחד המייצג את קטגוריית "עבודות", ותוודא שסך המשקלים לא חורג מ-100% מהקורס.</p>
+                </section>
+
+                <hr class="border-slate-100 dark:border-slate-700">
+
+                <section>
+                    <h4 class="font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-2"><i class="fas fa-shield-alt"></i> מערכת המגנים</h4>
+                    <p>בטבלת העריכה, תחת עמודות המשקל (%ע ו-%ב), תמצא כפתורי מגן שיגנו עליך מציון מבחן גבוה. לחיצה עליהם משנה את המצב שלהם:</p>
+                    <ul class="list-disc pr-5 mt-2 space-y-1 text-xs">
+                        <li><i class="fas fa-shield-alt text-slate-300"></i> <strong>אפור (כבוי):</strong> המטלה תחושב תמיד, גם אם פוגעת בציון.</li>
+                        <li><i class="fas fa-shield-alt text-green-500"></i> <strong>ירוק (מגן רגיל):</strong> אם ציון המבחן גבוה מציון המטלה, משקל המטלה יתאפס ויעבור במלואו למבחן.</li>
+                        <li><i class="fas fa-sliders-h text-purple-500"></i> <strong>סגול (מגן רציף - כמו בלינארית 2):</strong> (רלוונטי רק לבחנים). מפעיל נוסחת אינטרפולציה: ככל שההפרש בין המבחן לבוחן גדל, משקל הבוחן יורד בהדרגה. <strong>שימו לב:</strong> ברגע שתפעילו מגן זה, יפתח לכם שדה מיוחד בכרטיסיית הקורס למעלה שבו תוכלו להגדיר ידנית את אחוז המינימום והמקסימום של הבוחן.</li>
+                    </ul>
+                </section>
+
+                <hr class="border-slate-100 dark:border-slate-700">
+
+                <section>
+                    <h4 class="font-bold text-purple-600 dark:text-purple-400 mb-2 flex items-center gap-2"><i class="fas fa-robot"></i> מרכז ניתוח ויועץ חכם</h4>
+                    <p>הקובייה הימנית-עליונה מציגה נתונים ויזואליים. ניתן להחליף בין תצוגות (גרף, טבלה מפורטת). כפתור ה- <i class="fas fa-robot text-purple-500"></i> מפעיל את יועץ ה-AI, שינתח את הציונים והנק"ז שלך וימליץ על 3 הקורסים שהכי ישתלם לך לגשת בהם למועד ב' כדי להזניק את הממוצע.</p>
+                </section>
+                
+                <hr class="border-slate-100 dark:border-slate-700">
+
+                <section>
+                    <h4 class="font-bold text-red-500 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fas fa-download"></i> ניהול נתונים (גיבוי וטעינה)</h4>
+                    <p>כל הנתונים נשמרים אוטומטית בדפדפן שלך. עם זאת, בטבלת עריכת הנתונים ישנם כפתורים לגיבוי (<i class="fas fa-download text-slate-400"></i>) הורדת קובץ JSON למחשב, ולטעינה (<i class="fas fa-upload text-slate-400"></i>) של קובץ קיים. מומלץ לגבות את הנתונים מדי פעם.</p>
+                </section>
+
+            </div>
+            <div class="p-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 text-center">
+                <button onclick="closeHelpModal()" class="px-8 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition-colors">הבנתי, תודה!</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const defaultData = [
@@ -204,19 +280,22 @@
             if(c.simExam === undefined) c.simExam = null; 
             if(c.isSummer === undefined) c.isSummer = false; 
         });
-        
         let collapsedSemesters = {}; let chart = null; let currentChartType = 'bar'; let activeCalcContext = null;
         let celebratedCourses = {};
         let tableSortBy = 'semesterNum'; let tableSortDesc = false; 
 
+        // פונקציות לפתיחת וסגירת חלון העזרה
+        function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); }
+        function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); }
+
         function isSemesterSummer(s) { 
-            return courses.some(c => c.semester === s && c.isSummer); 
+            return courses.some(c => c.semester === s && c.isSummer);
         }
         
         function toggleSummerSemester(s) { 
-            const newVal = !isSemesterSummer(s); 
+            const newVal = !isSemesterSummer(s);
             courses.forEach(c => { if (c.semester === s) c.isSummer = newVal; }); 
-            saveData(); updateFilterOptions(); renderAll(); calculateAll(); 
+            saveData(); updateFilterOptions(); renderAll(); calculateAll();
         }
 
         function getSemesterDisplayInfo() {
@@ -224,7 +303,6 @@
             let info = {};
             let regularCount = 0;
             const letters = ['', 'א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ז\'', 'ח\'', 'ט\'', 'י\'', 'י"א', 'י"ב'];
-            
             sems.forEach(s => {
                 let isSummer = isSemesterSummer(s);
                 if (!isSummer) {
@@ -261,20 +339,39 @@
         }
 
         function calculateCourseFinal(c, useSim = true) {
-            if (c.isBinary) return "עובר"; 
-            let wp = parseFloat(c.weights.work) || 0, qp = parseFloat(c.weights.quiz) || 0;
+            if (c.isBinary) return "עובר";
+            let wp = parseFloat(c.weights.work) || 0;
+            let originalQp = parseFloat(c.weights.quiz) || 0;
+            let qp = originalQp;
+
             const w = parseFloat(c.work) || 0, q = parseFloat(c.quiz) || 0;
             const ex = (useSim && c.simExam !== null) ? parseFloat(c.simExam) : parseFloat(c.exam) || 0;
+
+            if (c.workMagen && w < ex) wp = 0;
+
+            if (c.quizMagen === 'sliding') {
+                const minW = c.slidingMin !== undefined ? parseFloat(c.slidingMin) : 5;
+                const maxW = c.slidingMax !== undefined ? parseFloat(c.slidingMax) : originalQp;
+                const diff = ex - q; 
+                if (diff >= 30) {
+                    qp = minW;
+                } else if (diff <= 0) {
+                    qp = maxW;
+                } else {
+                    qp = maxW - (diff / 30) * (maxW - minW);
+                }
+            } else if (c.quizMagen === true && q < ex) {
+                qp = 0; 
+            }
+
             let ew = Math.max(0, 100 - wp - qp);
-            if (c.workMagen && w < ex) wp = 0; if (c.quizMagen && q < ex) qp = 0;
-            let tw = wp + qp + ew; 
-            
+            let tw = wp + qp + ew;
+
             let rawFinal;
             if (tw === 0) rawFinal = ex;
             else rawFinal = (((w * wp) + (q * qp) + (ex * ew)) / tw);
-            
             rawFinal = Math.min(100, rawFinal);
-            
+
             const integerPart = Math.floor(rawFinal);
             const decimalPart = rawFinal - integerPart;
             return (decimalPart > 0.5) ? integerPart + 1 : integerPart;
@@ -295,7 +392,8 @@
             document.getElementById('totalCredits').innerText = tca;
             document.getElementById('resetSimBtn').classList.toggle('hidden', !isS);
             for (const [s, st] of Object.entries(semStats)) { const el = document.getElementById(`semAvg_${s}`); if (el) el.innerText = st.cr > 0 ? (st.sum / st.cr).toFixed(2) : "0.00"; }
-            calculateTarget();
+            
+            calculateTarget(); 
             
             if (currentChartType === 'ai') updateAIAdvisor(); 
             else if (currentChartType === 'table') renderSummaryTable();
@@ -332,7 +430,6 @@
                     finalGradeDisplay: fStr
                 };
             });
-
             mapped.sort((a, b) => {
                 let valA = a[tableSortBy];
                 let valB = b[tableSortBy];
@@ -344,11 +441,10 @@
                 if (valA < valB) return tableSortDesc ? 1 : -1;
                 if (valA > valB) return tableSortDesc ? -1 : 1;
                 return 0;
-            });
+             });
 
             let html = '';
             let totalCr = 0, totalGradeSum = 0, totalGradeCr = 0;
-
             mapped.forEach(c => {
                 totalCr += c.credits;
                 if (!c.isBinary) {
@@ -377,7 +473,6 @@
             const avgEl = document.getElementById('summaryTableAvg');
             if(totalCrEl) totalCrEl.innerText = totalCr;
             if(avgEl) avgEl.innerText = avg;
-
             ['name', 'semesterNum', 'credits', 'finalGrade'].forEach(col => {
                 let el = document.getElementById(`sortIcon_${col}`);
                 if (el) {
@@ -397,9 +492,12 @@
             if (parseFloat(fS) >= 90 && !celebratedCourses[i]) {
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#FFD700', '#10b981'] });
                 celebratedCourses[i] = true;
-            } else if (parseFloat(fS) < 90) { celebratedCourses[i] = false; }
+            } else if (parseFloat(fS) < 90) { celebratedCourses[i] = false;
+            }
 
-            const fe = document.getElementById(`final_${i}`); if(fe) { fe.innerText = fS; fe.className = `text-3xl font-black ${finalColor(fS)}`; }
+            const fe = document.getElementById(`final_${i}`);
+            if(fe) { fe.innerText = fS; fe.className = `text-3xl font-black ${finalColor(fS)}`;
+            }
             updateMagenBadges(i); calculateAll(); saveData();
         }
 
@@ -407,14 +505,15 @@
             courses[i].simExam = val === "" ? null : Math.min(100, Math.max(0, parseFloat(val)));
             document.getElementById(`simVal_${i}`).innerText = courses[i].simExam !== null ? courses[i].simExam : '--';
             const fS = calculateCourseFinal(courses[i], true);
-            
             if (parseFloat(fS) >= 90 && !celebratedCourses[i + '_sim']) {
                 confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#6366f1', '#10b981'] });
                 celebratedCourses[i + '_sim'] = true;
-            } else if (parseFloat(fS) < 90) { celebratedCourses[i + '_sim'] = false; }
+            } else if (parseFloat(fS) < 90) { celebratedCourses[i + '_sim'] = false;
+            }
 
             const fR = calculateCourseFinal(courses[i], false);
-            const fe = document.getElementById(`final_${i}`); if(fe) { fe.innerText = fS; fe.className = `text-3xl font-black ${finalColor(fS)}`; }
+            const fe = document.getElementById(`final_${i}`); if(fe) { fe.innerText = fS; fe.className = `text-3xl font-black ${finalColor(fS)}`;
+            }
             const diff = (parseFloat(fS) - parseFloat(fR)).toFixed(1);
             document.getElementById(`simDiff_${i}`).innerHTML = courses[i].simExam !== null ? `<span class="text-[10px] ${diff>=0?'text-green-500':'text-red-400'} font-bold">${diff>=0?'+':''}${diff}</span>` : '';
             updateMagenBadges(i); calculateAll();
@@ -422,6 +521,13 @@
 
         function updateData(i, f, v, sf = null, el = null) {
             let val = v;
+            
+            if (f === 'slidingMin' || f === 'slidingMax') {
+                courses[i][f] = Math.min(100, Math.max(0, parseFloat(v) || 0));
+                saveData(); renderAll(); calculateAll();
+                return;
+            }
+
             if(['work','quiz','exam','credits'].includes(f) || (f==='weights'&&sf)) {
                 val = Math.min(100, Math.max(0, parseFloat(v)||0));
                 if (f==='weights') {
@@ -430,7 +536,7 @@
                 }
                 if(el) el.value = val;
             }
-            if (f==='isBinary') courses[i].isBinary = !courses[i].isBinary; 
+            if (f==='isBinary') courses[i].isBinary = !courses[i].isBinary;
             else if (f==='weights'&&sf) courses[i].weights[sf] = val;
             else if (f==='name') courses[i].name = val;
             else courses[i][f] = (f==='semester') ? parseInt(val)||1 : val;
@@ -446,7 +552,7 @@
                 chart.data.labels = chartLabels;
                 chart.data.datasets[0].data = chartData;
                 chart.data.datasets[0].backgroundColor = currentChartType === 'bar' ? colors : 'rgba(59, 130, 246, 0.1)';
-                chart.update('none'); 
+                chart.update('none');
             } else {
                 chart = new Chart(ctx, {
                     type: currentChartType === 'bar' ? 'bar' : 'line',
@@ -461,10 +567,10 @@
             const list = document.getElementById('retakeList');
             
             const totalCr = courses.reduce((s, c) => s + (c.isBinary ? 0 : parseFloat(c.credits) || 0), 0);
-            if (totalCr === 0) { out.innerText = "הזן ציונים כדי לקבל המלצות."; return; }
+            if (totalCr === 0) { out.innerText = "הזן ציונים כדי לקבל המלצות."; return;
+            }
             
             let filteredCourses = courses.filter(c => !c.isBinary && shouldShowInChart(c));
-            
             if (filteredCourses.length === 0) {
                 out.innerText = "אין קורסים רלוונטיים להמלצה בחתך שנבחר.";
                 list.innerHTML = '';
@@ -477,12 +583,10 @@
                 const impact10pts = (10 * weight).toFixed(2);
                 return { name: c.name, gain: (100 - cur) * weight, weight, impact10pts, isSim: c.simExam !== null };
             });
-            
             insights.sort((a, b) => b.gain - a.gain);
             
             const scopeSelect = document.getElementById('scopeFilter');
             const scopeName = scopeSelect.options[scopeSelect.selectedIndex].text;
-            
             out.innerHTML = `ניתחתי את הציונים עבור <b>${scopeName}</b>. הנה המבחנים שהכי כדאי לשפר כדי להקפיץ את הממוצע הכללי:`;
             
             list.innerHTML = '';
@@ -493,38 +597,72 @@
             });
         }
 
-        function openSubCalc(i, t) { activeCalcContext = { index: i, type: t }; document.getElementById('modalTitleSuffix').innerText = t === 'work' ? 'עבודות' : 'בחנים'; document.getElementById('modalRows').innerHTML = ''; addSubCalcRow(); addSubCalcRow(); document.getElementById('subCalcModal').classList.remove('hidden'); updateModalResults(); }
-        function closeSubCalc() { document.getElementById('subCalcModal').classList.add('hidden'); activeCalcContext = null; }
-        function addSubCalcRow() { const d = document.createElement('div'); d.className = "grid grid-cols-12 gap-2 items-center subcalc-row"; d.innerHTML = `<div class="col-span-7"><input type="number" placeholder="ציון" min="0" max="100" oninput="updateModalResults()" class="sub-grade w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-4"><input type="number" placeholder="% משקל" min="0" max="100" oninput="updateModalResults()" class="sub-weight w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-1 text-center"><button onclick="this.parentElement.parentElement.remove(); updateModalResults();" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button></div>`; document.getElementById('modalRows').appendChild(d); }
-        function updateModalResults() { let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { let gIn = r.querySelector('.sub-grade'), wIn = r.querySelector('.sub-weight'); if (parseFloat(gIn.value) > 100) gIn.value = 100; if (parseFloat(wIn.value) > 100) wIn.value = 100; let g = parseFloat(gIn.value)||0, w = parseFloat(wIn.value)||0; if(w>0){tw+=w; ws+=(g*w);} }); document.getElementById('modalTotalWeight').innerText = tw.toFixed(1) + '%'; document.getElementById('modalFinalGrade').innerText = tw > 0 ? (ws/tw).toFixed(2) : "0"; }
-        function applySubCalc() { if (!activeCalcContext) return; let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { let g = parseFloat(r.querySelector('.sub-grade').value)||0, w = parseFloat(r.querySelector('.sub-weight').value)||0; if(w>0){tw+=w; ws+=(g*w);} }); const { index, type } = activeCalcContext; const newWeight = Math.min(100, tw); if (type === 'work') { courses[index].work = (ws/tw)||0; courses[index].weights.work = newWeight; if (newWeight + courses[index].weights.quiz > 100) courses[index].weights.quiz = 100 - newWeight; } else { courses[index].quiz = (ws/tw)||0; courses[index].weights.quiz = newWeight; if (newWeight + courses[index].weights.work > 100) courses[index].weights.work = 100 - newWeight; } saveData(); renderAll(); calculateAll(); closeSubCalc(); }
-        function updateMagenBadges(i) { const c=courses[i], el=document.getElementById(`magenBox_${i}`); if(!el)return; const ex=c.simExam!==null?c.simExam:c.exam; let h=''; if(c.workMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.work)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">עב' ${parseFloat(c.work)<parseFloat(ex)?'🛡️':'✅'}</span>`; if(c.quizMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.quiz)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">בחן ${parseFloat(c.quiz)<parseFloat(ex)?'🛡️':'✅'}</span>`; el.innerHTML=h; }
+        function openSubCalc(i, t) { activeCalcContext = { index: i, type: t };
+            document.getElementById('modalTitleSuffix').innerText = t === 'work' ? 'עבודות' : 'בחנים'; document.getElementById('modalRows').innerHTML = ''; addSubCalcRow(); addSubCalcRow(); document.getElementById('subCalcModal').classList.remove('hidden'); updateModalResults();
+        }
+        function closeSubCalc() { document.getElementById('subCalcModal').classList.add('hidden'); activeCalcContext = null;
+        }
+        function addSubCalcRow() { const d = document.createElement('div');
+            d.className = "grid grid-cols-12 gap-2 items-center subcalc-row"; d.innerHTML = `<div class="col-span-7"><input type="number" placeholder="ציון" min="0" max="100" oninput="updateModalResults()" class="sub-grade w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-4"><input type="number" placeholder="% משקל" min="0" max="100" oninput="updateModalResults()" class="sub-weight w-full bg-white dark:bg-slate-800 border border-slate-200 rounded-lg p-2 text-center text-sm outline-none"></div><div class="col-span-1 text-center"><button onclick="this.parentElement.parentElement.remove(); updateModalResults();"
+            class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button></div>`; document.getElementById('modalRows').appendChild(d); }
+        function updateModalResults() { let tw = 0, ws = 0;
+            document.querySelectorAll('.subcalc-row').forEach(r => { let gIn = r.querySelector('.sub-grade'), wIn = r.querySelector('.sub-weight'); if (parseFloat(gIn.value) > 100) gIn.value = 100; if (parseFloat(wIn.value) > 100) wIn.value = 100; let g = parseFloat(gIn.value)||0, w = parseFloat(wIn.value)||0; if(w>0){tw+=w; ws+=(g*w);} });
+            document.getElementById('modalTotalWeight').innerText = tw.toFixed(1) + '%'; document.getElementById('modalFinalGrade').innerText = tw > 0 ? (ws/tw).toFixed(2) : "0";
+        }
+        function applySubCalc() { if (!activeCalcContext) return;
+            let tw = 0, ws = 0; document.querySelectorAll('.subcalc-row').forEach(r => { let g = parseFloat(r.querySelector('.sub-grade').value)||0, w = parseFloat(r.querySelector('.sub-weight').value)||0; if(w>0){tw+=w; ws+=(g*w);} });
+            const { index, type } = activeCalcContext; const newWeight = Math.min(100, tw); if (type === 'work') { courses[index].work = (ws/tw)||0;
+            courses[index].weights.work = newWeight; if (newWeight + courses[index].weights.quiz > 100) courses[index].weights.quiz = 100 - newWeight; } else { courses[index].quiz = (ws/tw)||0;
+            courses[index].weights.quiz = newWeight; if (newWeight + courses[index].weights.work > 100) courses[index].weights.work = 100 - newWeight; } saveData(); renderAll(); calculateAll(); closeSubCalc();
+        }
+
+        function updateMagenBadges(i) { 
+            const c=courses[i], el=document.getElementById(`magenBox_${i}`); if(!el)return; 
+            const ex=c.simExam!==null?c.simExam:c.exam; let h='';
+            
+            if(c.workMagen) h+=`<span class="magen-badge text-[8px] ${parseFloat(c.work)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">עב' ${parseFloat(c.work)<parseFloat(ex)?'🛡️':'✅'}</span>`;
+            
+            if(c.quizMagen === true) {
+                h+=`<span class="magen-badge text-[8px] ${parseFloat(c.quiz)<parseFloat(ex)?'bg-slate-100 text-slate-500':'bg-green-100 text-green-600'} px-1.5 py-0.5 rounded border border-slate-200 ml-1">בחן ${parseFloat(c.quiz)<parseFloat(ex)?'🛡️':'✅'}</span>`;
+            } else if (c.quizMagen === 'sliding') {
+                const minW = c.slidingMin !== undefined ? parseFloat(c.slidingMin) : 5;
+                const maxW = c.slidingMax !== undefined ? parseFloat(c.slidingMax) : (parseFloat(c.weights.quiz) || 15);
+                let currentQp = maxW;
+                const diff = ex - parseFloat(c.quiz || 0);
+                if (diff >= 30) currentQp = minW;
+                else if (diff > 0) currentQp = maxW - (diff / 30) * (maxW - minW);
+                
+                h+=`<span class="magen-badge text-[8px] bg-purple-100 text-purple-600 border-purple-200 px-1.5 py-0.5 rounded border ml-1">מגן רציף (${currentQp.toFixed(1)}%) 🎚️</span>`;
+            }
+            el.innerHTML=h;
+        }
         
         function setChartType(t) { 
-            currentChartType = t; 
+            currentChartType = t;
             ['bar', 'line', 'ai', 'table'].forEach(id => {
                 const btn = document.getElementById(`btn-${id}`);
                 if(btn) btn.classList.toggle('active-tab', id === t);
-            }); 
-            
+            });
             document.getElementById('gradeChart').style.display = (t === 'ai' || t === 'table') ? 'none' : 'block'; 
-            document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai'); 
-            
+            document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai');
             const tableContent = document.getElementById('summaryTableContent');
             if (tableContent) tableContent.classList.toggle('hidden', t !== 'table');
             
-            if(chart){chart.destroy(); chart=null;} 
-            calculateAll(); 
+            if(chart){chart.destroy();
+            chart=null;} 
+            calculateAll();
         }
-        function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); calculateAll(); }
-        function enforceMax(el) { if (parseFloat(el.value) > 100) el.value = 100; if (parseFloat(el.value) < 0) el.value = 0; }
-        function saveData() { localStorage.setItem('harelGradesV11_2', JSON.stringify(courses)); }
+        function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); calculateAll();
+        }
+        function enforceMax(el) { if (parseFloat(el.value) > 100) el.value = 100;
+        if (parseFloat(el.value) < 0) el.value = 0; }
+        function saveData() { localStorage.setItem('harelGradesV11_2', JSON.stringify(courses));
+        }
         
         function updateFilterOptions() { 
             const s = document.getElementById('scopeFilter');
             const info = getSemesterDisplayInfo();
             const sems = Object.keys(info).map(Number).sort((a,b) => a-b);
-            
             if (sems.length === 0) {
                 s.innerHTML = '<option value="all">כל התואר</option>';
                 return;
@@ -533,90 +671,136 @@
             let maxYear = 1;
             sems.forEach(sem => { if (info[sem].year > maxYear) maxYear = info[sem].year; });
             
-            let h = '<option value="all">כל התואר</option>'; 
+            let h = '<option value="all">כל התואר</option>';
             const letters = ['', 'א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ז\'', 'ח\''];
-            
             for(let i = 1; i <= maxYear; i++) {
-                h += `<option value="year_${i}">שנה ${letters[i] || i}</option>`; 
+                h += `<option value="year_${i}">שנה ${letters[i] ||
+                i}</option>`; 
             }
             
-            h += `<option disabled>──────────</option>`; 
-            
+            h += `<option disabled>──────────</option>`;
             sems.forEach(sem => {
                 h += `<option value="sem_${sem}">סמסטר ${info[sem].name}</option>`;
             });
-            
             s.innerHTML = h; 
         }
         
         function shouldShowInChart(c) { 
-            const f = document.getElementById('scopeFilter').value; 
+            const f = document.getElementById('scopeFilter').value;
             if(f === 'all') return true; 
-            if(f.startsWith('sem_')) return c.semester === parseInt(f.split('_')[1]); 
+            if(f.startsWith('sem_')) return c.semester === parseInt(f.split('_')[1]);
             if(f.startsWith('year_')){
-                const y = parseInt(f.split('_')[1]); 
+                const y = parseInt(f.split('_')[1]);
                 const info = getSemesterDisplayInfo();
                 return info[c.semester] && info[c.semester].year === y;
             } 
-            return true; 
+            return true;
         }
         
-        function getBarColor(g) { const n = parseFloat(g); return n >= 90 ? '#10b981' : (n >= 80 ? '#3b82f6' : (n >= 60 ? '#eab308' : '#ef4444')); }
-        function finalColor(g) { const n = parseFloat(g); return n >= 90 ? 'text-emerald-500' : (n >= 80 ? 'text-blue-600' : (n >= 60 ? 'text-yellow-500' : 'text-red-500')); }
-        function startNewSemester() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 0; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms+1, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
-        function addNewCourse() { const ms = courses.length > 0 ? Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null }); saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
-        function resetAllSimulations() { courses.forEach(c => c.simExam = null); renderAll(); calculateAll(); }
-        function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(courses,null,2)],{type:"application/json"})); a.download=`Grades.json`; a.click(); }
+        function getBarColor(g) { const n = parseFloat(g);
+            return n >= 90 ? '#10b981' : (n >= 80 ? '#3b82f6' : (n >= 60 ? '#eab308' : '#ef4444'));
+        }
+        function finalColor(g) { const n = parseFloat(g); return n >= 90 ?
+            'text-emerald-500' : (n >= 80 ? 'text-blue-600' : (n >= 60 ? 'text-yellow-500' : 'text-red-500'));
+        }
+        function startNewSemester() { const ms = courses.length > 0 ?
+            Math.max(...courses.map(c => c.semester)) : 0; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms+1, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null });
+            saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
+        function addNewCourse() { const ms = courses.length > 0 ?
+            Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null });
+            saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
+        function resetAllSimulations() { courses.forEach(c => c.simExam = null);
+            renderAll(); calculateAll(); }
+        function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(courses,null,2)],{type:"application/json"})); a.download=`Grades.json`; a.click();
+        }
         
-        function triggerImport() { document.getElementById('importFile').click(); }
+        function triggerImport() { document.getElementById('importFile').click();
+        }
         function importData(input) {
-            const file = input.files[0]; if (!file) return;
+            const file = input.files[0];
+            if (!file) return;
             const reader = new FileReader();
             reader.onload = e => {
                 try {
                     const data = JSON.parse(e.target.result);
                     if (Array.isArray(data)) { courses = data; } 
-                    else if (data.courses && Array.isArray(data.courses)) { courses = data.courses; }
-                    saveData(); renderAll(); calculateAll();
+                    else if (data.courses && Array.isArray(data.courses)) { courses = data.courses;
+                    }
+                    saveData();
+                    renderAll(); calculateAll();
                     alert('הנתונים נטענו בהצלחה!');
-                } catch (err) { alert('שגיאה בטעינת הקובץ.'); }
+                } catch (err) { alert('שגיאה בטעינת הקובץ.');
+                }
                 input.value = ''; 
             };
             reader.readAsText(file);
         }
 
-        function removeCourse(i) { if(confirm("למחוק?")) { courses.splice(i,1); saveData(); renderAll(); calculateAll(); } }
-        function resetDefaults() { if(confirm("לאפס?")) { courses = JSON.parse(JSON.stringify(defaultData)); saveData(); renderAll(); calculateAll(); } }
-        function toggleMagen(i, type) { if(type==='work') courses[i].workMagen = !courses[i].workMagen; else courses[i].quizMagen = !courses[i].quizMagen; saveData(); renderAll(); calculateAll(); }
+        function removeCourse(i) { if(confirm("למחוק?")) { courses.splice(i,1); saveData(); renderAll(); calculateAll();
+        } }
+        function resetDefaults() { if(confirm("לאפס?")) { courses = JSON.parse(JSON.stringify(defaultData)); saveData(); renderAll(); calculateAll();
+        } }
+        
+        function toggleMagen(i, type) { 
+            if(type==='work') {
+                courses[i].workMagen = !courses[i].workMagen;
+            } else {
+                if (courses[i].quizMagen === false || !courses[i].quizMagen) {
+                    courses[i].quizMagen = true;
+                } else if (courses[i].quizMagen === true) {
+                    courses[i].quizMagen = 'sliding';
+                    if (courses[i].slidingMax === undefined) courses[i].slidingMax = parseFloat(courses[i].weights.quiz) || 15;
+                    if (courses[i].slidingMin === undefined) courses[i].slidingMin = Math.max(0, courses[i].slidingMax - 10);
+                } else {
+                    courses[i].quizMagen = false;
+                }
+            }
+            saveData(); renderAll(); calculateAll(); 
+        }
 
         function calculateTarget() { 
             const inputEl = document.getElementById('targetInput');
             const res = document.getElementById('targetResult');
             if (!inputEl || !res) return; 
 
-            const t = Math.min(100, parseFloat(inputEl.value)); 
-            if(!t){res.innerText="---"; return;} 
-            let tc=0, cp=0, tewc=0; 
-            courses.forEach(c=>{ 
-                if(c.isBinary) return; 
-                const cr=parseFloat(c.credits)||0; tc+=cr; 
-                const ew=Math.max(0, 100-(c.weights.work||0)-(c.weights.quiz||0)); 
-                cp+=((c.work||0)*(c.weights.work||0)/100+(c.quiz||0)*(c.weights.quiz||0)/100)*cr; tewc+=cr*(ew/100); 
-            }); 
-            if(tc===0||tewc<=0)return; 
-            const n=Math.ceil(((t*tc)-cp)/tewc); 
-            res.innerHTML=n>100?`<span class="text-red-500">${n} 😱</span>`:(n<0?`<span class="text-green-500">עברת!</span>`:n); 
+            const targetVal = parseFloat(inputEl.value) || 88; 
+            const currentGpa = parseFloat(document.getElementById('totalAverage').innerText) || 0;
+            
+            const simCurrentEl = document.getElementById('targetSimCurrent');
+            if (simCurrentEl) simCurrentEl.innerText = currentGpa.toFixed(2);
+
+            const progressBar = document.getElementById('targetProgressBar');
+            if (progressBar) progressBar.style.width = `${Math.min(100, currentGpa)}%`;
+
+            const targetMarker = document.getElementById('targetMarker');
+            if (targetMarker) targetMarker.style.right = `${targetVal}%`;
+
+            if (currentGpa >= targetVal) {
+                res.innerHTML = '🎉 <span class="text-green-500 text-sm">הגעת ליעד! אתה על המסלול.</span>';
+                if (progressBar) {
+                    progressBar.classList.remove('from-blue-500', 'to-indigo-400');
+                    progressBar.classList.add('from-green-500', 'to-emerald-400');
+                }
+            } else {
+                const diff = (targetVal - currentGpa).toFixed(2);
+                res.innerHTML = `חסרות <span class="text-red-500 font-black">${diff}</span> נקודות ליעד`;
+                if (progressBar) {
+                    progressBar.classList.add('from-blue-500', 'to-indigo-400');
+                    progressBar.classList.remove('from-green-500', 'to-emerald-400');
+                }
+            }
         }
 
         function renderAll() {
-            const w = document.getElementById('semesterWrapper'); w.innerHTML = '';
+            const w = document.getElementById('semesterWrapper');
+            w.innerHTML = '';
             const sems = [...new Set(courses.map(c => c.semester))].sort((a,b) => a-b);
             sems.forEach(s => {
                 w.innerHTML += `<div class="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-slate-100 dark:border-dark-border overflow-hidden"><div class="p-4 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between cursor-pointer" onclick="document.getElementById('semContainer_${s}').classList.toggle('hidden-content'); document.getElementById('semIcon_${s}').classList.toggle('rotate-180')"><div class="flex items-center gap-3"><i id="semIcon_${s}" class="fas fa-chevron-down text-slate-400 transition-transform"></i><h2 class="text-lg font-black text-slate-700 dark:text-slate-200">סמסטר ${getSemesterDisplayName(s)} ${isSemesterSummer(s)?'☀️':''}</h2></div><div class="bg-white dark:bg-slate-700 px-3 py-1 rounded-full border border-slate-200 shadow-sm"><span id="semAvg_${s}" class="text-lg font-bold text-blue-600">0.00</span></div></div><div id="semContainer_${s}" class="p-4 space-y-4 border-t border-slate-100 dark:border-slate-700/50"></div></div>`;
                 courses.forEach((c, i) => {
                     if (c.semester !== s) return;
                     const f = calculateCourseFinal(c, true); const isS = c.simExam !== null;
-                    document.getElementById(`semContainer_${s}`).innerHTML += `<div class="bg-white dark:bg-dark-card p-4 rounded-xl border border-slate-100 dark:border-dark-border hover:border-blue-300 transition-colors group"><div class="flex flex-col sm:flex-row items-center gap-4"><div class="flex-1 w-full"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-1"><h3 class="font-bold text-slate-700 dark:text-slate-200 text-lg">${c.name}</h3><div id="magenBox_${i}"></div></div><span class="text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded">${c.credits} נק"ז</span></div>${c.isBinary ? '<div class="text-green-500 font-bold text-xl"><i class="fas fa-check-circle"></i> עובר</div>' : `<div class="space-y-3"><div class="flex items-center gap-3"><div class="w-10 text-center"><span class="text-sm font-bold text-blue-600" id="examLabel_${i}">${c.exam}</span><p class="text-[8px] text-slate-400">אמת</p></div><div class="flex-1 pt-1"><input type="range" min="0" max="100" value="${c.exam}" oninput="updateExamLive(${i}, this.value)" class="accent-blue-600"></div></div><div class="flex items-center gap-3 bg-indigo-50/50 dark:bg-indigo-900/10 p-2 rounded-lg"><div class="w-10 text-center"><span class="text-sm font-bold text-indigo-600" id="simVal_${i}">${isS?c.simExam:'--'}</span><p class="text-[8px] text-indigo-400 font-bold uppercase">מה אם?</p></div><div class="flex-1 pt-1"><input type="range" min="0" max="100" value="${isS?c.simExam:c.exam}" oninput="updateSimLive(${i},this.value)" class="accent-indigo-600 sim-slider"></div><button onclick="updateSimLive(${i},'')" class="text-[10px] text-slate-300 hover:text-red-400"><i class="fas fa-times-circle"></i></button></div></div>`}</div>${c.isBinary?'':`<div class="text-center w-full sm:w-24 sm:pl-4 sm:border-r border-slate-100 dark:border-slate-700"><div class="text-[10px] text-slate-400 font-bold uppercase">סופי</div><div id="final_${i}" class="text-3xl font-black ${finalColor(f)}">${f}</div><div id="simDiff_${i}"></div></div>`}</div></div>`;
+                    document.getElementById(`semContainer_${s}`).innerHTML += `<div class="bg-white dark:bg-dark-card p-4 rounded-xl border border-slate-100 dark:border-dark-border hover:border-blue-300 transition-colors group"><div class="flex flex-col sm:flex-row items-center gap-4"><div class="flex-1 w-full"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-1"><h3 class="font-bold text-slate-700 dark:text-slate-200 text-lg">${c.name}</h3><div id="magenBox_${i}"></div></div><span class="text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded">${c.credits} נק"ז</span></div>${c.isBinary ? '<div class="text-green-500 font-bold text-xl"><i class="fas fa-check-circle"></i> עובר</div>' : `<div class="space-y-3"><div class="flex items-center gap-3"><div class="w-10 text-center"><span class="text-sm font-bold text-blue-600" id="examLabel_${i}">${c.exam}</span><p class="text-[8px] text-slate-400">אמת</p></div><div class="flex-1 pt-1"><input type="range" min="0" max="100" value="${c.exam}" oninput="updateExamLive(${i}, this.value)" class="accent-blue-600"></div></div><div class="flex items-center gap-3 bg-indigo-50/50 dark:bg-indigo-900/10 p-2 rounded-lg"><div class="w-10 text-center"><span class="text-sm font-bold text-indigo-600" id="simVal_${i}">${isS?c.simExam:'--'}</span><p class="text-[8px] text-indigo-400 font-bold uppercase">מה אם?</p></div><div class="flex-1 pt-1"><input type="range" min="0" max="100" value="${isS?c.simExam:c.exam}" oninput="updateSimLive(${i},this.value)" class="accent-indigo-600 sim-slider"></div><button onclick="updateSimLive(${i},'')" class="text-[10px] text-slate-300 hover:text-red-400"><i class="fas fa-times-circle"></i></button></div>${c.quizMagen === 'sliding' ? `<div class="flex items-center justify-between bg-purple-50 dark:bg-purple-900/10 p-2 rounded-lg border border-purple-100 dark:border-purple-800/50 animate-pop mt-2"><span class="text-[10px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1"><i class="fas fa-sliders-h"></i> טווח מגן בוחן רציף:</span><div class="flex items-center gap-2"><div class="flex items-center gap-1"><span class="text-[9px] text-slate-500">מינימום</span><input type="number" value="${c.slidingMin !== undefined ? c.slidingMin : 5}" onchange="updateData(${i},'slidingMin',this.value)" class="w-12 text-center text-xs border border-purple-200 dark:border-purple-700 rounded p-1 bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 outline-none focus:ring-1 focus:ring-purple-400"><span class="text-[9px] text-slate-500">%</span></div><span class="text-slate-300">-</span><div class="flex items-center gap-1"><span class="text-[9px] text-slate-500">מקסימום</span><input type="number" value="${c.slidingMax !== undefined ? c.slidingMax : (c.weights.quiz || 15)}" onchange="updateData(${i},'slidingMax',this.value)" class="w-12 text-center text-xs border border-purple-200 dark:border-purple-700 rounded p-1 bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 outline-none focus:ring-1 focus:ring-purple-400"><span class="text-[9px] text-slate-500">%</span></div></div></div>` : ''}</div>`}</div>${c.isBinary?'':`<div class="text-center w-full sm:w-24 sm:pl-4 sm:border-r border-slate-100 dark:border-slate-700"><div class="text-[10px] text-slate-400 font-bold uppercase">סופי</div><div id="final_${i}" class="text-3xl font-black ${finalColor(f)}">${f}</div><div id="simDiff_${i}"></div></div>`}</div></div>`;
                     updateMagenBadges(i);
                 });
             });
@@ -624,32 +808,33 @@
         }
 
         function renderTable() {
-            const tb = document.getElementById('settingsTableBody'); tb.innerHTML = '';
+            const tb = document.getElementById('settingsTableBody');
+            tb.innerHTML = '';
             const sems = [...new Set(courses.map(c => c.semester))].sort((a,b) => a-b);
             sems.forEach(s => {
                 const isc = collapsedSemesters[s];
                 tb.innerHTML += `<tr class="bg-slate-100 dark:bg-slate-700 font-bold">
                     <td colspan="9" class="p-1.5 pr-4 text-xs">
                         <div class="flex justify-between items-center">
-                            <span class="cursor-pointer flex-1" onclick="collapsedSemesters[${s}]=!collapsedSemesters[${s}]; renderTable();"><i class="fas fa-chevron-up text-[8px] transition-transform ${isc?'rotate-180':''}"></i> סמסטר ${getSemesterDisplayName(s)}</span>
+                             <span class="cursor-pointer flex-1" onclick="collapsedSemesters[${s}]=!collapsedSemesters[${s}]; renderTable();"><i class="fas fa-chevron-up text-[8px] transition-transform ${isc?'rotate-180':''}"></i> סמסטר ${getSemesterDisplayName(s)}</span>
                             <span class="font-normal bg-white dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-[9px] cursor-pointer"><label class="cursor-pointer flex items-center gap-1"><input type="checkbox" class="cursor-pointer" onchange="toggleSummerSemester(${s})" ${isSemesterSummer(s)?'checked':''}> סמסטר קיץ ☀️</label></span>
                         </div>
                     </td>
                 </tr>`;
-                
                 if (!isc) {
                     courses.forEach((c, i) => {
                         if (c.semester !== s) return;
                         const bin = c.isBinary;
+                        
                         tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-700">
                             <td class="p-1"><input type="text" value="${c.name}" onchange="updateData(${i},'name',this.value)" class="input-minimal text-right w-20"></td>
                             <td class="p-1 text-center"><input type="checkbox" onchange="updateData(${i},'isBinary')" ${bin?'checked':''} class="w-3 h-3 cursor-pointer" title="קורס עובר/לא עובר"></td>
                             <td class="p-1"><input type="number" value="${c.semester}" onchange="updateData(${i},'semester',this.value)" class="input-minimal w-10 text-center"></td>
                             <td class="p-1"><input type="number" value="${c.credits}" onchange="updateData(${i},'credits',this.value, null, this)" class="input-minimal w-10 text-center"></td>
-                            <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.work)}" onchange="updateData(${i},'work',this.value, null, this)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'work')" class="text-[9px] text-slate-400 hover:text-blue-500"><i class="fas fa-calculator"></i></button></div></td>
-                            <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.quiz)}" onchange="updateData(${i},'quiz',this.value, null, this)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'quiz')" class="text-[9px] text-slate-400 hover:text-blue-500"><i class="fas fa-calculator"></i></button></div></td>
-                            <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-0.5 justify-center"><input type="number" value="${c.weights.work}" onchange="updateData(${i},'weights',this.value,'work', this)" class="input-minimal text-orange-600 w-8"> <button onclick="toggleMagen(${i},'work')" class="text-[9px] ${c.workMagen?'text-green-500':'text-slate-300'}"><i class="fas fa-shield-alt"></i></button></div></td>
-                            <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-0.5 justify-center"><input type="number" value="${c.weights.quiz}" onchange="updateData(${i},'weights',this.value,'quiz', this)" class="input-minimal text-orange-600 w-8"> <button onclick="toggleMagen(${i},'quiz')" class="text-[9px] ${c.quizMagen?'text-green-500':'text-slate-300'}"><i class="fas fa-shield-alt"></i></button></div></td>
+                            <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.work)}" onchange="updateData(${i},'work',this.value, null, this)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'work')" class="text-[9px] text-slate-400 hover:text-blue-500 transition"><i class="fas fa-calculator"></i></button></div></td>
+                            <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-1 justify-center"><input type="number" value="${Math.round(c.quiz)}" onchange="updateData(${i},'quiz',this.value, null, this)" class="input-minimal text-blue-600 w-10"> <button onclick="openSubCalc(${i},'quiz')" class="text-[9px] text-slate-400 hover:text-blue-500 transition"><i class="fas fa-calculator"></i></button></div></td>
+                            <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-0.5 justify-center"><input type="number" value="${c.weights.work}" onchange="updateData(${i},'weights',this.value,'work', this)" class="input-minimal text-orange-600 w-8"> <button onclick="toggleMagen(${i},'work')" class="text-[9px] ${c.workMagen?'text-green-500':'text-slate-300'} hover:text-green-400 transition" title="מגן עבודות"><i class="fas fa-shield-alt"></i></button></div></td>
+                            <td class="p-1 ${bin?'opacity-20 pointer-events-none':''}"><div class="flex items-center gap-0.5 justify-center"><input type="number" value="${c.weights.quiz}" onchange="updateData(${i},'weights',this.value,'quiz', this)" class="input-minimal text-orange-600 w-8"> <button onclick="toggleMagen(${i},'quiz')" class="text-[9px] ${c.quizMagen === true ? 'text-green-500' : (c.quizMagen === 'sliding' ? 'text-purple-500' : 'text-slate-300')} hover:text-purple-400 transition" title="החלף מצב מגן בחנים"><i class="fas ${c.quizMagen === 'sliding' ? 'fa-sliders-h' : 'fa-shield-alt'}"></i></button></div></td>
                             <td class="p-1 text-center"><button onclick="removeCourse(${i})" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-times"></i></button></td>
                         </tr>`;
                     });
@@ -672,7 +857,7 @@
                 headers: { 'Accept': 'application/json' }
             }).then(response => {
                 if (response.ok) {
-                    alert('ההצעה נשלחה בהצלחה! תודה רבה.');
+                     alert('ההצעה נשלחה בהצלחה! תודה רבה.');
                     form.reset();
                 } else {
                     alert('אופס, הייתה בעיה בשליחה. נסה שוב מאוחר יותר.');
