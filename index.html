@@ -223,52 +223,56 @@
                 <button onclick="closeHelpModal()" class="text-white hover:text-indigo-200 transition"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                
-                <section>
-                    <h4 class="font-bold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2"><i class="fas fa-sliders-h"></i> ציוני סימולציה (מה אם?)</h4>
-                    <p>בכל קורס יופיעו שני סליידרים. העליון (תכלת) הוא ציון המבחן. שים לב שאם אתה רוצה להוציא קורס מהחישוב בגלל שעדיין לא קיבלת עליו ציון, אפשר פשוט להגדיר אותו כעובר בינארי והמערכת תתעלם ממנו. <strong>האמיתי</strong> שלך. התחתון (סגול) הוא כלי סימולציה שמאפשר לך לבדוק "מה אם אקבל ציון מסוים במבחן?". משחק עם הסליידר הסגול יעדכן מיד את הציון הסופי של הקורס, את הממוצע הכללי למעלה, ואת מד היעד בצד.</p>
-                </section>
-
-                <hr class="border-slate-100 dark:border-slate-700">
-
-                <section>
-                    <h4 class="font-bold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון עבודות ובחנים</h4>
-                    <p>בטבלת "עריכת נתונים", ליד העמודות של ציוני העבודות (עב') והבחנים (בחן), ישנו סמל של מחשבון <i class="fas fa-calculator text-blue-500"></i>. לחיצה עליו תפתח חלון בו תוכל להזין מספר עבודות עם המשקל הפנימי של כל אחת. המערכת תשקלל אותן אוטומטית לציון אחד המייצג את קטגוריית "עבודות", ותוודא שסך המשקלים לא חורג מ-100% מהקורס.</p>
-                </section>
-
-                <hr class="border-slate-100 dark:border-slate-700">
-
-                <section>
-                    <h4 class="font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-2"><i class="fas fa-shield-alt"></i> מערכת המגנים</h4>
-                    <p>בטבלת העריכה, תחת עמודות המשקל (%ע ו-%ב), תמצא כפתורי מגן שיגנו עליך מציון מבחן גבוה. לחיצה עליהם משנה את המצב שלהם:</p>
-                    <ul class="list-disc pr-5 mt-2 space-y-1 text-xs">
-                        <li><i class="fas fa-shield-alt text-slate-300"></i> <strong>אפור (כבוי):</strong> המטלה תחושב תמיד, גם אם פוגעת בציון.</li>
-                        <li><i class="fas fa-shield-alt text-green-500"></i> <strong>ירוק (מגן רגיל):</strong> אם ציון המבחן גבוה מציון המטלה, משקל המטלה יתאפס ויעבור במלואו למבחן.</li>
-                        <li><i class="fas fa-sliders-h text-purple-500"></i> <strong>סגול (מגן רציף - כמו בלינארית 2):</strong> (רלוונטי רק לבחנים). מפעיל נוסחת אינטרפולציה: ככל שההפרש בין המבחן לבוחן גדל, משקל הבוחן יורד בהדרגה. <strong>שימו לב:</strong> ברגע שתפעילו מגן זה, יפתח לכם שדה מיוחד בכרטיסיית הקורס למעלה שבו תוכלו להגדיר ידנית את אחוז המינימום והמקסימום של הבוחן.</li>
-                    </ul>
-                </section>
-
-                <hr class="border-slate-100 dark:border-slate-700">
-
-                <section>
-                    <h4 class="font-bold text-purple-600 dark:text-purple-400 mb-2 flex items-center gap-2"><i class="fas fa-robot"></i> מרכז ניתוח ויועץ חכם</h4>
-                    <p>הקובייה הימנית-עליונה מציגה נתונים ויזואליים. ניתן להחליף בין תצוגות (גרף, טבלה מפורטת). כפתור ה- <i class="fas fa-robot text-purple-500"></i> מפעיל את יועץ ה-AI, שינתח את הציונים והנק"ז שלך וימליץ על 3 הקורסים שהכי ישתלם לך לגשת בהם למועד ב' כדי להזניק את הממוצע.</p>
-                </section>
-                
-                <hr class="border-slate-100 dark:border-slate-700">
-
-                <section>
-                    <h4 class="font-bold text-red-500 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fas fa-download"></i> ניהול נתונים (גיבוי וטעינה)</h4>
-                    <p>כל הנתונים נשמרים אוטומטית בדפדפן שלך. עם זאת, בטבלת עריכת הנתונים ישנם כפתורים לגיבוי (<i class="fas fa-download text-slate-400"></i>) הורדת קובץ JSON למחשב, ולטעינה (<i class="fas fa-upload text-slate-400"></i>) של קובץ קיים. מומלץ לגבות את הנתונים מדי פעם.</p>
-                </section>
-
-            </div>
-            <div class="p-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 text-center">
-                <button onclick="closeHelpModal()" class="px-8 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition-colors">הבנתי, תודה!</button>
-            </div>
+    
+    <section>
+        <h4 class="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2"><i class="fas fa-info-circle text-blue-500"></i> איך המחשבון עובד? (הבסיס)</h4>
+        <p>העבודה עם המחשבון מתבצעת בעיקר דרך <strong>טבלת עריכת הנתונים</strong> שבתחתית העמוד. שם תוסיף קורסים, תגדיר נק"ז, ותזין את ציוני המבחנים, העבודות והבחנים כולל המשקלים שלהם. כל שינוי שתעשה בטבלה ישתקף מיד למעלה בתצוגת הסמסטרים ובמרכז הניתוח.</p>
+        <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg mt-3 text-xs border border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-200">
+            <strong>💡 טיפ:</strong> הוספת קורס ועדיין אין לך ציון סופי בו? כדי שהוא לא יוריד לך את הממוצע בינתיים, פשוט סמן אותו בטבלה כ-<strong>"בינארי"</strong>. ככה הוא ייחשב רק כ"עובר" - הנק"ז שלו ייספרו, אבל הוא לא ייכנס לחישוב הממוצע הכללי עד שתזין ציון ותוריד את הסימון.
         </div>
-    </div>
+    </section>
 
+    <hr class="border-slate-100 dark:border-slate-700">
+
+    <section>
+        <h4 class="font-bold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2"><i class="fas fa-sliders-h"></i> ציוני סימולציה (מה אם?)</h4>
+        <p>בכל קורס יופיעו שני סליידרים. העליון (תכלת) הוא ציון המבחן <strong>האמיתי</strong> שלך. התחתון (סגול) הוא כלי סימולציה שמאפשר לך לבדוק "מה אם אקבל ציון מסוים במבחן?". משחק עם הסליידר הסגול יעדכן מיד את הציון הסופי של הקורס, את הממוצע הכללי למעלה, ואת מד היעד בצד.</p>
+    </section>
+
+    <hr class="border-slate-100 dark:border-slate-700">
+
+    <section>
+        <h4 class="font-bold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון עבודות ובחנים</h4>
+        <p>בטבלת "עריכת נתונים", ליד העמודות של ציוני העבודות (עב') והבחנים (בחן), ישנו סמל של מחשבון <i class="fas fa-calculator text-blue-500"></i>. לחיצה עליו תפתח חלון בו תוכל להזין מספר עבודות עם המשקל הפנימי של כל אחת. המערכת תשקלל אותן אוטומטית לציון אחד המייצג את קטגוריית "עבודות", ותוודא שסך המשקלים לא חורג מ-100% מהקורס.</p>
+    </section>
+
+    <hr class="border-slate-100 dark:border-slate-700">
+
+    <section>
+        <h4 class="font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-2"><i class="fas fa-shield-alt"></i> מערכת המגנים</h4>
+        <p>בטבלת העריכה, תחת עמודות המשקל (%ע ו-%ב), תמצא כפתורי מגן שיגנו עליך מציון מבחן גבוה. לחיצה עליהם משנה את המצב שלהם:</p>
+        <ul class="list-disc pr-5 mt-2 space-y-1 text-xs">
+            <li><i class="fas fa-shield-alt text-slate-300"></i> <strong>אפור (כבוי):</strong> המטלה תחושב תמיד, גם אם פוגעת בציון.</li>
+            <li><i class="fas fa-shield-alt text-green-500"></i> <strong>ירוק (מגן רגיל):</strong> אם ציון המבחן גבוה מציון המטלה, משקל המטלה יתאפס ויעבור במלואו למבחן.</li>
+            <li><i class="fas fa-sliders-h text-purple-500"></i> <strong>סגול (מגן רציף):</strong> (רלוונטי לבחנים). מפעיל נוסחת אינטרפולציה: ככל שההפרש בין המבחן לבוחן גדל, משקל הבוחן יורד בהדרגה. ברגע שתפעילו מגן זה, יפתח שדה מיוחד בכרטיסיית הקורס למעלה שבו תוכלו להגדיר ידנית את אחוז המינימום והמקסימום.</li>
+        </ul>
+    </section>
+
+    <hr class="border-slate-100 dark:border-slate-700">
+
+    <section>
+        <h4 class="font-bold text-purple-600 dark:text-purple-400 mb-2 flex items-center gap-2"><i class="fas fa-chart-pie"></i> מרכז ניתוח, פילטרים ויועץ חכם</h4>
+        <p>הקובייה הימנית-עליונה מציגה את הנתונים שלך בצורה ויזואלית. בראש הקובייה תמצא <strong>פילטר תצוגה</strong> - בעזרתו תוכל לבחור לראות את הנתונים של כל התואר, או לסנן לפי שנה וסמסטר ספציפיים. הסינון ישפיע על הגרפים ועל ההמלצות שתקבל. ניתן להחליף בין תצוגות (גרף עמודות, קו מגמה, טבלה מפורטת). כפתור ה- <i class="fas fa-robot text-purple-500"></i> מפעיל את יועץ ה-AI, שינתח את הציונים וימליץ על 3 הקורסים שהכי ישתלם לגשת בהם למועד ב' כדי להזניק את הממוצע.</p>
+    </section>
+    
+    <hr class="border-slate-100 dark:border-slate-700">
+
+    <section>
+        <h4 class="font-bold text-red-500 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fas fa-download"></i> ניהול נתונים (גיבוי וטעינה)</h4>
+        <p>כל הנתונים נשמרים אוטומטית בדפדפן שלך. עם זאת, בטבלת עריכת הנתונים ישנם כפתורים לגיבוי (<i class="fas fa-download text-slate-400"></i>) המורידים קובץ JSON למחשב, ולטעינה (<i class="fas fa-upload text-slate-400"></i>) של קובץ קיים. מומלץ לגבות את הנתונים מדי פעם.</p>
+    </section>
+
+</div>
     <script>
         const defaultData = [
             { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 15, quiz: 15 }, exam: 100, workMagen: false, quizMagen: false, isBinary: false, isSummer: false, simExam: null },
