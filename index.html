@@ -54,7 +54,7 @@
         }
 
         @media print {
-            .no-print, button, input[type=range], #subCalcModal, #helpModal, #aiAdvisorContent, #gradeChart, #filterContainer, #summaryTableContent { display: none !important; }
+            .no-print, button, input[type=range], #subCalcModal, #helpModal, #aiAdvisorContent, #gradeChart, #filterContainer, #summaryTableContent, #comfortContent { display: none !important; }
             body { background: white; color: black; }
             .xl\:col-span-5 { display: none; }
             .xl\:col-span-7 { width: 100%; grid-column: span 12; }
@@ -123,6 +123,7 @@
                                     <button onclick="setChartType('line')" id="btn-line" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700" title="מגמה לאורך זמן"><i class="fas fa-chart-line"></i></button>
                                     <button onclick="setChartType('ai')" id="btn-ai" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700 text-purple-500 font-bold" title="יועץ חכם"><i class="fas fa-robot"></i></button>
                                     <button onclick="setChartType('table')" id="btn-table" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700 text-blue-500" title="טבלת סיכום"><i class="fas fa-table"></i></button>
+                                    <button onclick="setChartType('comfort')" id="btn-comfort" class="text-xs px-3 py-1 rounded-md transition hover:bg-white dark:hover:bg-slate-700 text-pink-500 font-bold" title="מחשבון נחמות"><i class="fas fa-hand-holding-heart"></i></button>
                                 </div>
                             </div>
                             <div id="filterContainer" class="no-print">
@@ -165,6 +166,11 @@
                                         <span class="text-slate-600 dark:text-slate-300">ממוצע: <span id="summaryTableAvg" class="text-blue-600 dark:text-blue-400">0.00</span></span>
                                     </div>
                                 </div>
+                            </div>
+                            <div id="comfortContent" class="absolute inset-0 hidden flex-col items-center justify-center bg-pink-50 dark:bg-pink-900/10 rounded-xl border border-pink-100 dark:border-pink-800/50 p-6 text-center z-10">
+                                <div class="text-4xl mb-3 animate-bounce">🩹</div>
+                                <h3 class="font-black text-pink-600 dark:text-pink-400 text-lg mb-2">מחשבון נחמות</h3>
+                                <p id="comfortText" class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">מחשב נתונים...</p>
                             </div>
                         </div>
                     </div>
@@ -216,7 +222,7 @@
 
     <div id="subCalcModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4"><div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-pop"><div class="p-4 bg-blue-600 text-white flex justify-between items-center"><h3 class="font-bold flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון <span id="modalTitleSuffix"></span></h3><button onclick="closeSubCalc()" class="text-white hover:text-blue-200"><i class="fas fa-times"></i></button></div><div class="p-4 space-y-3 max-h-[50vh] overflow-y-auto" id="modalRows"></div><div class="p-4 bg-slate-50 dark:bg-slate-800 space-y-3 border-t"><div class="flex justify-between text-xs font-bold"><span>משקל מתוך הקורס:</span><span id="modalTotalWeight" class="text-orange-500">0%</span></div><div class="flex justify-between text-lg font-black"><span>ציון משוקלל:</span><span id="modalFinalGrade" class="text-blue-600">0</span></div><div class="grid grid-cols-2 gap-3 mt-4"><button onclick="addSubCalcRow()" class="py-2 border border-blue-600 text-blue-600 rounded-xl font-bold text-xs hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">הוסף מטלה</button><button onclick="applySubCalc()" class="py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition">עדכן נתונים</button></div></div></div></div>
 
- <div id="helpModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4">
+    <div id="helpModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4">
         <div class="bg-white dark:bg-dark-card w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-pop flex flex-col max-h-[90vh]">
             <div class="p-4 bg-indigo-600 text-white flex justify-between items-center">
                 <h3 class="font-bold flex items-center gap-2 text-lg"><i class="fas fa-book"></i> הסבר על פונקציות האתר</h3>
@@ -268,6 +274,13 @@
                 <hr class="border-slate-100 dark:border-slate-700">
 
                 <section>
+                    <h4 class="font-bold text-pink-500 dark:text-pink-400 mb-2 flex items-center gap-2"><i class="fas fa-hand-holding-heart"></i> מחשבון נחמות</h4>
+                    <p>נמצא במרכז הניתוח. פיצ'ר קליל שנועד לעודד ברגעי משבר - המחשבון סורק את כל הציונים שלך ובודק איזה קורס הכי "דופק" לך את הממוצע, ומראה לך לאיזה ציון היית מזנק אם רק האוניברסיטה הייתה מסכימה לוותר עליו.</p>
+                </section>
+                
+                <hr class="border-slate-100 dark:border-slate-700">
+
+                <section>
                     <h4 class="font-bold text-red-500 dark:text-red-400 mb-2 flex items-center gap-2"><i class="fas fa-download"></i> ניהול נתונים (גיבוי וטעינה)</h4>
                     <p>כל הנתונים נשמרים אוטומטית בדפדפן שלך. עם זאת, בטבלת עריכת הנתונים ישנם כפתורים לגיבוי (<i class="fas fa-download text-slate-400"></i>) המורידים קובץ JSON למחשב, ולטעינה (<i class="fas fa-upload text-slate-400"></i>) של קובץ קיים. מומלץ לגבות את הנתונים מדי פעם.</p>
                 </section>
@@ -279,6 +292,7 @@
             </div>
         </div>
     </div>
+    
     <script>
         const defaultData = [
             { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 15, quiz: 15 }, exam: 100, workMagen: false, quizMagen: false, isBinary: false, isSummer: false, simExam: null },
@@ -409,6 +423,7 @@
             calculateTarget(); 
             
             if (currentChartType === 'ai') updateAIAdvisor(); 
+            else if (currentChartType === 'comfort') updateComfortCalculator();
             else if (currentChartType === 'table') renderSummaryTable();
             else updateChart(labels, data, colors, semStats);
         }
@@ -609,6 +624,57 @@
                 list.innerHTML += `<div class="bg-white dark:bg-slate-800 p-2 rounded border-r-4 border-${cols[i]}-500 shadow-sm"><div class="flex justify-between font-bold text-[10px]"><span>${ins.name}</span><span class="text-green-500">+${ins.gain.toFixed(2)} לממוצע הכללי</span></div><p class="text-[9px] text-slate-400">כל 10 נקודות שתשפר פה שוות <b>${ins.impact10pts}</b> בממוצע הכללי.</p></div>`;
             });
         }
+        
+        // פונקציית מחשבון הנחמות החדשה!
+        function updateComfortCalculator() {
+            const textEl = document.getElementById('comfortText');
+            if (!textEl) return;
+
+            // לוקחים רק קורסים עם ציונים שנכנסים לחישוב
+            let filteredCourses = courses.filter(c => !c.isBinary && shouldShowInChart(c));
+            
+            if (filteredCourses.length <= 1) {
+                textEl.innerHTML = "צריך לפחות 2 קורסים עם ציונים כדי שיהיה על מה להתנחם.";
+                return;
+            }
+
+            let totalGradeSum = 0;
+            let totalCr = 0;
+            
+            filteredCourses.forEach(c => {
+                const f = parseFloat(calculateCourseFinal(c, true));
+                const cr = parseFloat(c.credits) || 0;
+                totalGradeSum += f * cr;
+                totalCr += cr;
+            });
+
+            if (totalCr === 0) return;
+            const currentAvg = totalGradeSum / totalCr;
+
+            let bestCourseToDrop = null;
+            let maxNewAvg = currentAvg;
+
+            // בודקים מה קורה אם מוציאים כל קורס בנפרד
+            filteredCourses.forEach(c => {
+                const f = parseFloat(calculateCourseFinal(c, true));
+                const cr = parseFloat(c.credits) || 0;
+                if (totalCr - cr <= 0) return; 
+                
+                const newAvg = (totalGradeSum - (f * cr)) / (totalCr - cr);
+                if (newAvg > maxNewAvg) {
+                    maxNewAvg = newAvg;
+                    bestCourseToDrop = c;
+                }
+            });
+
+            // מציירים את התוצאה למסך
+            if (bestCourseToDrop && (maxNewAvg - currentAvg) > 0.01) {
+                const diff = (maxNewAvg - currentAvg).toFixed(2);
+                textEl.innerHTML = `אם רק האוניברסיטה הייתה מבטלת את <strong>${bestCourseToDrop.name}</strong>...<br>הממוצע שלך היה קופץ ל-<span class="font-black text-pink-500 text-2xl drop-shadow-sm block mt-2">${maxNewAvg.toFixed(2)}</span><span class="text-xs text-slate-500 font-bold mt-1 block">(עלייה של ${diff}+ נקודות)</span>`;
+            } else {
+                textEl.innerHTML = "הממוצע שלך מאוזן מדי! אין אף קורס שמושך אותך משמעותית למטה. 👑";
+            }
+        }
 
         function openSubCalc(i, t) { activeCalcContext = { index: i, type: t };
             document.getElementById('modalTitleSuffix').innerText = t === 'work' ? 'עבודות' : 'בחנים'; document.getElementById('modalRows').innerHTML = ''; addSubCalcRow(); addSubCalcRow(); document.getElementById('subCalcModal').classList.remove('hidden'); updateModalResults();
@@ -650,21 +716,32 @@
             el.innerHTML=h;
         }
         
+        // פונקציית החלפת התצוגה המעודכנת
         function setChartType(t) { 
             currentChartType = t;
-            ['bar', 'line', 'ai', 'table'].forEach(id => {
+            ['bar', 'line', 'ai', 'table', 'comfort'].forEach(id => {
                 const btn = document.getElementById(`btn-${id}`);
                 if(btn) btn.classList.toggle('active-tab', id === t);
             });
-            document.getElementById('gradeChart').style.display = (t === 'ai' || t === 'table') ? 'none' : 'block'; 
+            
+            document.getElementById('gradeChart').style.display = (t === 'bar' || t === 'line') ? 'block' : 'none'; 
             document.getElementById('aiAdvisorContent').classList.toggle('hidden', t !== 'ai');
+            
             const tableContent = document.getElementById('summaryTableContent');
             if (tableContent) tableContent.classList.toggle('hidden', t !== 'table');
             
-            if(chart){chart.destroy();
-            chart=null;} 
-            calculateAll();
+            const comfortContent = document.getElementById('comfortContent');
+            if (comfortContent) {
+                comfortContent.classList.toggle('hidden', t !== 'comfort');
+                comfortContent.classList.toggle('flex', t === 'comfort'); 
+            }
+            
+            if(chart) { chart.destroy(); chart=null; } 
+            
+            if (t === 'comfort') updateComfortCalculator(); 
+            else calculateAll();
         }
+        
         function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); calculateAll();
         }
         function enforceMax(el) { if (parseFloat(el.value) > 100) el.value = 100;
