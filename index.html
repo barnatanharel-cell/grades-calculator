@@ -54,7 +54,7 @@
         }
 
         @media print {
-            .no-print, button, input[type=range], #subCalcModal, #helpModal, #aiAdvisorContent, #binaryAdvisorContent, #gradeChart, #filterContainer, #summaryTableContent { display: none !important; }
+            .no-print, button, input[type=range], #subCalcModal, #helpModal, #componentsModal, #aiAdvisorContent, #binaryAdvisorContent, #gradeChart, #filterContainer, #summaryTableContent { display: none !important; }
             body { background: white; color: black; }
             .xl\:col-span-5 { display: none; }
             .xl\:col-span-7 { width: 100%; grid-column: span 12; }
@@ -97,6 +97,10 @@
                     <i class="fas fa-question-circle"></i>
                     <span class="hidden sm:inline text-xs font-bold">הסבר על פונקציות האתר</span>
                 </button>
+                
+                <!-- כפתור תואר כפול חדש -->
+                <button onclick="openComponentsModal()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition no-print text-sm" title="הגדרת רכיבי תואר כפול">🤓</button>
+                
                 <button onclick="toggleTheme()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition no-print" title="מצב לילה/יום"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button>
                 <div class="text-right ml-2 border-r border-slate-200 dark:border-slate-700 pr-4 relative min-w-[120px]">
                     <div class="flex justify-between items-center mb-1">
@@ -105,6 +109,9 @@
                     </div>
                     <div id="totalAverage" class="text-5xl font-black text-blue-600 leading-none">00.00</div>
                     <div class="text-xs text-slate-400 mt-1">סה"כ נק"ז: <span id="totalCredits">0</span></div>
+                    
+                    <!-- הצגת הרכיבים של התואר הכפול -->
+                    <div id="componentsGpaContainer" class="mt-2 space-y-1 border-t border-slate-200 dark:border-slate-700 pt-2 hidden"></div>
                 </div>
             </div>
         </div>
@@ -217,7 +224,7 @@
                         <div class="overflow-x-auto p-1">
                             <table class="w-full text-[11px] border-collapse">
                                 <thead class="text-[9px] text-slate-400 uppercase sticky top-0 bg-white dark:bg-dark-card z-10">
-                                    <tr><th class="p-2 text-right">קורס</th><th class="p-1" title="קורס בינארי (עובר/לא עובר)">בינארי</th><th class="p-1">סמ'</th><th class="p-1">נק"ז</th><th class="p-1">עב'</th><th class="p-1">בחן</th><th class="p-1 text-orange-500">%ע</th><th class="p-1 text-orange-500">%ב</th><th class="p-1"></th></tr>
+                                    <tr><th class="p-2 text-right">קורס</th><th class="p-1 text-center" title="שיוך לרכיב התואר (למשל: חשמל/מכונות)">רכיב</th><th class="p-1" title="קורס בינארי (עובר/לא עובר)">בינארי</th><th class="p-1">סמ'</th><th class="p-1">נק"ז</th><th class="p-1">עב'</th><th class="p-1">בחן</th><th class="p-1 text-orange-500">%ע</th><th class="p-1 text-orange-500">%ב</th><th class="p-1"></th></tr>
                                 </thead>
                                 <tbody id="settingsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
                             </table>
@@ -231,7 +238,26 @@
         </div>
     </div>
 
+    <!-- מודל מחשבון משנה -->
     <div id="subCalcModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4"><div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-pop"><div class="p-4 bg-blue-600 text-white flex justify-between items-center"><h3 class="font-bold flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון <span id="modalTitleSuffix"></span></h3><button onclick="closeSubCalc()" class="text-white hover:text-blue-200"><i class="fas fa-times"></i></button></div><div class="p-4 space-y-3 max-h-[50vh] overflow-y-auto" id="modalRows"></div><div class="p-4 bg-slate-50 dark:bg-slate-800 space-y-3 border-t"><div class="flex justify-between text-xs font-bold"><span>משקל מתוך הקורס:</span><span id="modalTotalWeight" class="text-orange-500">0%</span></div><div class="flex justify-between text-lg font-black"><span>ציון משוקלל:</span><span id="modalFinalGrade" class="text-blue-600">0</span></div><div class="grid grid-cols-2 gap-3 mt-4"><button onclick="addSubCalcRow()" class="py-2 border border-blue-600 text-blue-600 rounded-xl font-bold text-xs hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">הוסף מטלה</button><button onclick="applySubCalc()" class="py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition">עדכן נתונים</button></div></div></div></div>
+
+    <!-- מודל תואר כפול (רכיבים) -->
+    <div id="componentsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4">
+        <div class="bg-white dark:bg-dark-card w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-pop">
+            <div class="p-4 bg-slate-700 text-white flex justify-between items-center">
+                <h3 class="font-bold flex items-center gap-2"><i class="fas fa-layer-group"></i> רכיבי תואר כפול 🤓</h3>
+                <button onclick="closeComponentsModal()" class="text-white hover:text-blue-200"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 space-y-3">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">הגדר כאן את רכיבי התואר שלך (למשל: חשמל, מכונות). לאחר מכן, תוכל לשייך כל קורס בטבלה לרכיב המתאים, והממוצעים הנפרדים יופיעו למעלה.</p>
+                <div id="componentsList" class="space-y-2 mt-4 max-h-[40vh] overflow-y-auto"></div>
+                <button onclick="addComponentRow()" class="w-full py-2 border border-dashed border-blue-400 text-blue-500 rounded-lg text-xs font-bold hover:bg-blue-50 dark:hover:bg-slate-800 transition">+ הוסף רכיב חדש</button>
+            </div>
+            <div class="p-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+                <button onclick="saveComponents()" class="w-full py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-md">שמור רכיבים</button>
+            </div>
+        </div>
+    </div>
 
  <div id="helpModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4">
         <div class="bg-white dark:bg-dark-card w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-pop flex flex-col max-h-[90vh]">
@@ -247,6 +273,13 @@
                     <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg mt-3 text-xs border border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-200">
                         <strong>💡 טיפ:</strong> הוספת קורס ועדיין אין לך ציון סופי בו? כדי שהוא לא יוריד לך את הממוצע בינתיים, פשוט סמן אותו בטבלה כ-<strong>"בינארי"</strong>. ככה הוא ייחשב רק כ"עובר" - הנק"ז שלו ייספרו, אבל הוא לא ייכנס לחישוב הממוצע הכללי עד שתזין ציון ותוריד את הסימון.
                     </div>
+                </section>
+
+                <hr class="border-slate-100 dark:border-slate-700">
+
+                <section>
+                    <h4 class="font-bold text-yellow-600 dark:text-yellow-500 mb-2 flex items-center gap-2"><i class="fas fa-layer-group"></i> תואר כפול (כפתור ה-🤓)</h4>
+                    <p>אם אתה לומד תואר כפול (למשל חשמל ומכונות), לחיצה על הכפתור 🤓 בראש העמוד תאפשר לך להגדיר את שמות הרכיבים של התואר. לאחר מכן, בטבלת עריכת הנתונים למטה תתווסף עמודה שבה תוכל לשייך כל קורס לרכיב המתאים. המערכת תחשב ותציג למעלה את הממוצע הנפרד לכל רכיב בזמן אמת, כולל התחשבות בסימולציות ("מה אם") שתעשה.</p>
                 </section>
 
                 <hr class="border-slate-100 dark:border-slate-700">
@@ -303,27 +336,69 @@
             </div>
         </div>
     </div>
+    
     <script>
         const defaultData = [
-            { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 15, quiz: 15 }, exam: 100, workMagen: false, quizMagen: false, isBinary: false, isSummer: false, simExam: null },
-            { id: 'discrete', name: 'דיסקרטית', semester: 1, credits: 3.5, work: 100, quiz: 78, weights: { work: 8, quiz: 7 }, exam: 100, workMagen: false, quizMagen: true, isBinary: false, isSummer: false, simExam: null },
-            { id: 'linear', name: 'לינארית', semester: 1, credits: 3.5, work: 100, quiz: 90, weights: { work: 15, quiz: 10 }, exam: 100, isBinary: false, isSummer: false, simExam: null },
-            { id: 'physics', name: 'פיזיקה', semester: 1, credits: 3.5, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 100, quizMagen: false, isBinary: false, isSummer: false, simExam: null },
-            { id: 'math_intro', name: 'מבוא מתמטי', semester: 1, credits: 2.5, work: 100, quiz: 0, weights: { work: 30, quiz: 0 }, exam: 100, isBinary: false, isSummer: false, simExam: null }, 
+            { id: 'calc', name: 'חדו"א 1', semester: 1, credits: 5, work: 100, quiz: 87, weights: { work: 15, quiz: 15 }, exam: 100, workMagen: false, quizMagen: false, isBinary: false, isSummer: false, simExam: null, component: '' },
+            { id: 'discrete', name: 'דיסקרטית', semester: 1, credits: 3.5, work: 100, quiz: 78, weights: { work: 8, quiz: 7 }, exam: 100, workMagen: false, quizMagen: true, isBinary: false, isSummer: false, simExam: null, component: '' },
+            { id: 'linear', name: 'לינארית', semester: 1, credits: 3.5, work: 100, quiz: 90, weights: { work: 15, quiz: 10 }, exam: 100, isBinary: false, isSummer: false, simExam: null, component: '' },
+            { id: 'physics', name: 'פיזיקה', semester: 1, credits: 3.5, work: 100, quiz: 0, weights: { work: 10, quiz: 0 }, exam: 100, quizMagen: false, isBinary: false, isSummer: false, simExam: null, component: '' },
+            { id: 'math_intro', name: 'מבוא מתמטי', semester: 1, credits: 2.5, work: 100, quiz: 0, weights: { work: 30, quiz: 0 }, exam: 100, isBinary: false, isSummer: false, simExam: null, component: '' }, 
         ];
         let courses = JSON.parse(localStorage.getItem('harelGradesV11_2')) || JSON.parse(JSON.stringify(defaultData));
+        let degreeComponents = JSON.parse(localStorage.getItem('harelComponentsV11')) || [];
         
         courses.forEach(c => { 
             if(c.simExam === undefined) c.simExam = null; 
             if(c.isSummer === undefined) c.isSummer = false; 
+            if(c.component === undefined) c.component = ''; 
         });
         let collapsedSemesters = {}; let chart = null; let currentChartType = 'bar'; let activeCalcContext = null;
         let celebratedCourses = {};
         let tableSortBy = 'semesterNum'; let tableSortDesc = false; 
 
-        // פונקציות לפתיחת וסגירת חלון העזרה
         function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); }
         function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); }
+
+        function openComponentsModal() {
+            renderComponentsList();
+            document.getElementById('componentsModal').classList.remove('hidden');
+        }
+        function closeComponentsModal() {
+            document.getElementById('componentsModal').classList.add('hidden');
+        }
+        
+        function renderComponentsList() {
+            const list = document.getElementById('componentsList');
+            list.innerHTML = '';
+            if(degreeComponents.length === 0) addComponentRow();
+            else {
+                degreeComponents.forEach((comp) => {
+                    list.insertAdjacentHTML('beforeend', `<div class="flex gap-2 comp-row mt-2">
+                        <input type="text" value="${comp}" class="comp-input flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-lg p-2 text-sm outline-none">
+                        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 px-2 transition"><i class="fas fa-trash"></i></button>
+                    </div>`);
+                });
+            }
+        }
+        function addComponentRow() {
+            document.getElementById('componentsList').insertAdjacentHTML('beforeend', `<div class="flex gap-2 comp-row mt-2">
+                    <input type="text" placeholder="שם הרכיב (למשל: חשמל)" class="comp-input flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-lg p-2 text-sm outline-none">
+                    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 px-2 transition"><i class="fas fa-trash"></i></button>
+                </div>`);
+        }
+        function saveComponents() {
+            const inputs = document.querySelectorAll('.comp-input');
+            degreeComponents = [];
+            inputs.forEach(inp => {
+                const val = inp.value.trim();
+                if(val) degreeComponents.push(val);
+            });
+            localStorage.setItem('harelComponentsV11', JSON.stringify(degreeComponents));
+            closeComponentsModal();
+            renderTable();
+            calculateAll();
+        }
 
         function isSemesterSummer(s) { 
             return courses.some(c => c.semester === s && c.isSummer);
@@ -421,8 +496,8 @@
                 if (!semStats[c.semester]) semStats[c.semester] = { sum: 0, cr: 0 };
                 if (c.isBinary) return; 
                 
-                const fS = parseFloat(calculateCourseFinal(c, true)); // ציון עם סימולציה
-                const fR = parseFloat(calculateCourseFinal(c, false)); // ציון אמת ללא סימולציה
+                const fS = parseFloat(calculateCourseFinal(c, true)); 
+                const fR = parseFloat(calculateCourseFinal(c, false)); 
                 
                 if(c.simExam !== null) isS = true; 
                 
@@ -441,7 +516,6 @@
             document.getElementById('totalCredits').innerText = tca;
             document.getElementById('resetSimBtn').classList.toggle('hidden', !isS);
             
-            // לוגיקה לתגית ההפרש של ממוצע התואר
             const totalDiffEl = document.getElementById('totalSimDiff');
             if (totalDiffEl) {
                 if (isS) {
@@ -450,6 +524,45 @@
                 } else {
                     totalDiffEl.innerHTML = '';
                 }
+            }
+
+            // חישוב ממוצעים לרכיבי התואר
+            const compContainer = document.getElementById('componentsGpaContainer');
+            if (degreeComponents && degreeComponents.length > 0) {
+                compContainer.classList.remove('hidden');
+                let compHtml = '';
+                degreeComponents.forEach(comp => {
+                    let cSumS = 0, cSumR = 0, cCr = 0;
+                    courses.forEach(c => {
+                        if (c.component === comp && !c.isBinary) {
+                            const cr = parseFloat(c.credits) || 0;
+                            const fS = parseFloat(calculateCourseFinal(c, true));
+                            const fR = parseFloat(calculateCourseFinal(c, false));
+                            cSumS += fS * cr;
+                            cSumR += fR * cr;
+                            cCr += cr;
+                        }
+                    });
+                    const cAvgS = cCr > 0 ? (cSumS / cCr).toFixed(2) : "0.00";
+                    const cAvgR = cCr > 0 ? (cSumR / cCr).toFixed(2) : "0.00";
+                    
+                    let diffHtml = '';
+                    if (isS && cCr > 0) {
+                        const diff = (cAvgS - cAvgR).toFixed(2);
+                        if (diff !== "0.00") {
+                            diffHtml = `<span class="text-[9px] ${diff >= 0 ? 'text-green-500' : 'text-red-400'} bg-${diff >= 0 ? 'green' : 'red'}-50 dark:bg-slate-800 px-1 rounded ml-1 border border-${diff >= 0 ? 'green' : 'red'}-100 dark:border-slate-600">${diff >= 0 ? '+' : ''}${diff}</span>`;
+                        }
+                    }
+
+                    compHtml += `<div class="flex justify-between items-center text-xs font-bold bg-slate-50 dark:bg-slate-800/80 px-2 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <span class="text-slate-500 dark:text-slate-400">${comp} (${cCr} נק"ז):</span> 
+                        <span class="text-blue-600 dark:text-blue-400 flex items-center gap-1">${cAvgS} ${diffHtml}</span>
+                    </div>`;
+                });
+                compContainer.innerHTML = compHtml;
+            } else {
+                compContainer.classList.add('hidden');
+                compContainer.innerHTML = '';
             }
 
             for (const [s, st] of Object.entries(semStats)) { const el = document.getElementById(`semAvg_${s}`); if (el) el.innerText = st.cr > 0 ? (st.sum / st.cr).toFixed(2) : "0.00"; }
@@ -489,14 +602,14 @@
                 let f = parseFloat(calculateCourseFinal(c, true));
                 let cr = parseFloat(c.credits) || 0;
                 
-                if (baseCr - cr <= 0) return; // הגנה מחלוקה באפס אם יש רק קורס אחד
+                if (baseCr - cr <= 0) return; 
                 
                 let simSum = baseSum - (f * cr);
                 let simCr = baseCr - cr;
                 let simAvg = simSum / simCr;
                 let diff = simAvg - baseAvg;
                 
-                if (diff > 0.001) { // רק אם יש שיפור ממשי
+                if (diff > 0.001) { 
                     insights.push({ id: c.id, name: c.name, diff: diff, newAvg: simAvg, oldGrade: f, credits: cr });
                 }
             });
@@ -708,8 +821,9 @@
             }
             if (f==='isBinary') courses[i].isBinary = !courses[i].isBinary;
             else if (f==='weights'&&sf) courses[i].weights[sf] = val;
-            else if (f==='name') courses[i].name = val;
+            else if (f==='name' || f==='component') courses[i][f] = val;
             else courses[i][f] = (f==='semester') ? parseInt(val)||1 : val;
+            
             saveData(); if (f==='semester') updateFilterOptions();
             renderAll(); calculateAll(); 
         }
@@ -877,10 +991,10 @@
             'text-emerald-500' : (n >= 80 ? 'text-blue-600' : (n >= 60 ? 'text-yellow-500' : 'text-red-500'));
         }
         function startNewSemester() { const ms = courses.length > 0 ?
-            Math.max(...courses.map(c => c.semester)) : 0; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms+1, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null });
+            Math.max(...courses.map(c => c.semester)) : 0; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms+1, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null, component: '' });
             saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
         function addNewCourse() { const ms = courses.length > 0 ?
-            Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null });
+            Math.max(...courses.map(c => c.semester)) : 1; courses.push({ id: Date.now(), name: 'קורס חדש', semester: ms, credits: 3, work: 100, quiz: 0, weights: { work: 0, quiz: 0 }, exam: 60, isBinary: false, isSummer: false, simExam: null, component: '' });
             saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
         function resetAllSimulations() { courses.forEach(c => c.simExam = null);
             renderAll(); calculateAll(); }
@@ -987,7 +1101,7 @@
             sems.forEach(s => {
                 const isc = collapsedSemesters[s];
                 tb.innerHTML += `<tr class="bg-slate-100 dark:bg-slate-700 font-bold">
-                    <td colspan="9" class="p-1.5 pr-4 text-xs">
+                    <td colspan="10" class="p-1.5 pr-4 text-xs">
                         <div class="flex justify-between items-center">
                              <span class="cursor-pointer flex-1" onclick="collapsedSemesters[${s}]=!collapsedSemesters[${s}]; renderTable();"><i class="fas fa-chevron-up text-[8px] transition-transform ${isc?'rotate-180':''}"></i> סמסטר ${getSemesterDisplayName(s)}</span>
                             <span class="font-normal bg-white dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-[9px] cursor-pointer"><label class="cursor-pointer flex items-center gap-1"><input type="checkbox" class="cursor-pointer" onchange="toggleSummerSemester(${s})" ${isSemesterSummer(s)?'checked':''}> סמסטר קיץ ☀️</label></span>
@@ -999,8 +1113,12 @@
                         if (c.semester !== s) return;
                         const bin = c.isBinary;
                         
+                        // יצירת אפשרויות לרכיבי התואר
+                        let compOptions = `<option value="">כללי</option>` + degreeComponents.map(comp => `<option value="${comp}" ${c.component === comp ? 'selected' : ''}>${comp}</option>`).join('');
+                        
                         tb.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-700">
                             <td class="p-1"><input type="text" value="${c.name}" onchange="updateData(${i},'name',this.value)" class="input-minimal text-right w-20"></td>
+                            <td class="p-1 text-center"><select onchange="updateData(${i},'component',this.value)" class="input-minimal text-[10px] w-14 bg-transparent cursor-pointer font-bold text-slate-500">${compOptions}</select></td>
                             <td class="p-1 text-center"><input type="checkbox" onchange="updateData(${i},'isBinary')" ${bin?'checked':''} class="w-3 h-3 cursor-pointer" title="קורס עובר/לא עובר"></td>
                             <td class="p-1"><input type="number" value="${c.semester}" onchange="updateData(${i},'semester',this.value)" class="input-minimal w-10 text-center"></td>
                             <td class="p-1"><input type="number" value="${c.credits}" onchange="updateData(${i},'credits',this.value, null, this)" class="input-minimal w-10 text-center"></td>
@@ -1045,5 +1163,7 @@
 
         init();
     </script>
+    
+
 </body>
 </html>
