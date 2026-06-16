@@ -532,30 +532,35 @@
                 compContainer.classList.remove('hidden');
                 let compHtml = '';
                 degreeComponents.forEach(comp => {
-                    let cSumS = 0, cSumR = 0, cCr = 0;
+                    let cSumS = 0, cSumR = 0, cCrGPA = 0, cCrTotal = 0; // פיצלנו לנק"ז לממוצע ונק"ז כללי
                     courses.forEach(c => {
-                        if (c.component === comp && !c.isBinary) {
+                        if (c.component === comp) {
                             const cr = parseFloat(c.credits) || 0;
-                            const fS = parseFloat(calculateCourseFinal(c, true));
-                            const fR = parseFloat(calculateCourseFinal(c, false));
-                            cSumS += fS * cr;
-                            cSumR += fR * cr;
-                            cCr += cr;
+                            cCrTotal += cr; // הנק"ז נספר תמיד עבור הרכיב
+                            
+                            if (!c.isBinary) { // חישוב ממוצע מתבצע רק לקורסים שאינם בינאריים
+                                const fS = parseFloat(calculateCourseFinal(c, true));
+                                const fR = parseFloat(calculateCourseFinal(c, false));
+                                cSumS += fS * cr;
+                                cSumR += fR * cr;
+                                cCrGPA += cr;
+                            }
                         }
                     });
-                    const cAvgS = cCr > 0 ? (cSumS / cCr).toFixed(2) : "0.00";
-                    const cAvgR = cCr > 0 ? (cSumR / cCr).toFixed(2) : "0.00";
+                    const cAvgS = cCrGPA > 0 ? (cSumS / cCrGPA).toFixed(2) : "0.00";
+                    const cAvgR = cCrGPA > 0 ? (cSumR / cCrGPA).toFixed(2) : "0.00";
                     
                     let diffHtml = '';
-                    if (isS && cCr > 0) {
+                    if (isS && cCrGPA > 0) {
                         const diff = (cAvgS - cAvgR).toFixed(2);
                         if (diff !== "0.00") {
                             diffHtml = `<span class="text-[9px] ${diff >= 0 ? 'text-green-500' : 'text-red-400'} bg-${diff >= 0 ? 'green' : 'red'}-50 dark:bg-slate-800 px-1 rounded ml-1 border border-${diff >= 0 ? 'green' : 'red'}-100 dark:border-slate-600">${diff >= 0 ? '+' : ''}${diff}</span>`;
                         }
                     }
 
+                    // מציגים את סך הנק"ז הכולל של הרכיב
                     compHtml += `<div class="flex justify-between items-center text-xs font-bold bg-slate-50 dark:bg-slate-800/80 px-2 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700">
-                        <span class="text-slate-500 dark:text-slate-400">${comp} (${cCr} נק"ז):</span> 
+                        <span class="text-slate-500 dark:text-slate-400">${comp} (${cCrTotal} נק"ז):</span> 
                         <span class="text-blue-600 dark:text-blue-400 flex items-center gap-1">${cAvgS} ${diffHtml}</span>
                     </div>`;
                 });
