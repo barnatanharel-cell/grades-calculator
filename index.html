@@ -1003,7 +1003,16 @@
             saveData(); updateFilterOptions(); renderAll(); calculateAll(); }
         function resetAllSimulations() { courses.forEach(c => c.simExam = null);
             renderAll(); calculateAll(); }
-        function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(courses,null,2)],{type:"application/json"})); a.download=`Grades.json`; a.click();
+        function exportData() { 
+            // אורזים גם את הקורסים וגם את הרכיבים לאובייקט אחד
+            const dataToExport = {
+                courses: courses,
+                components: degreeComponents
+            };
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(dataToExport, null, 2)], {type: "application/json"})); 
+            a.download = `Grades.json`; 
+            a.click();
         }
         
         function triggerImport() { document.getElementById('importFile').click();
@@ -1015,19 +1024,38 @@
             reader.onload = e => {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (Array.isArray(data)) { courses = data; } 
-                    else if (data.courses && Array.isArray(data.courses)) { courses = data.courses;
+                    
+                    // תמיכה בקובצי גיבוי ישנים (מערך פשוט של קורסים)
+                    if (Array.isArray(data)) { 
+                        courses = data; 
+                        // נסיון לשחזר את הרכיבים מתוך הקורסים עצמם
+                        const uniqueComps = [...new Set(courses.map(c => c.component).filter(Boolean))];
+                        if(uniqueComps.length > 0) {
+                            degreeComponents = uniqueComps;
+                            localStorage.setItem('harelComponentsV11', JSON.stringify(degreeComponents));
+                        }
+                    } 
+                    // תמיכה במבנה הגיבוי החדש
+                    else {
+                        if (data.courses && Array.isArray(data.courses)) { 
+                            courses = data.courses;
+                        }
+                        if (data.components && Array.isArray(data.components)) {
+                            degreeComponents = data.components;
+                            localStorage.setItem('harelComponentsV11', JSON.stringify(degreeComponents));
+                        }
                     }
                     saveData();
-                    renderAll(); calculateAll();
-                    alert('הנתונים נטענו בהצלחה!');
-                } catch (err) { alert('שגיאה בטעינת הקובץ.');
+                    renderAll(); 
+                    calculateAll();
+                    alert('הנתונים והרכיבים נטענו בהצלחה!');
+                } catch (err) { 
+                    alert('שגיאה בטעינת הקובץ.');
                 }
                 input.value = ''; 
             };
             reader.readAsText(file);
         }
-
         function removeCourse(i) { if(confirm("למחוק?")) { courses.splice(i,1); saveData(); renderAll(); calculateAll();
         } }
         function resetDefaults() { if(confirm("לאפס?")) { courses = JSON.parse(JSON.stringify(defaultData)); saveData(); renderAll(); calculateAll();
