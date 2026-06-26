@@ -98,7 +98,6 @@
                     <span class="hidden sm:inline text-xs font-bold">הסבר על פונקציות האתר</span>
                 </button>
                 
-                <!-- כפתור תואר כפול חדש -->
                 <button onclick="openComponentsModal()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition no-print text-sm" title="הגדרת רכיבי תואר כפול">🤓</button>
                 
                 <button onclick="toggleTheme()" class="p-3 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:scale-110 transition no-print" title="מצב לילה/יום"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button>
@@ -110,7 +109,6 @@
                     <div id="totalAverage" class="text-5xl font-black text-blue-600 leading-none">00.00</div>
                     <div class="text-xs text-slate-400 mt-1">סה"כ נק"ז: <span id="totalCredits">0</span></div>
                     
-                    <!-- הצגת הרכיבים של התואר הכפול -->
                     <div id="componentsGpaContainer" class="mt-2 space-y-1 border-t border-slate-200 dark:border-slate-700 pt-2 hidden"></div>
                 </div>
             </div>
@@ -238,10 +236,8 @@
         </div>
     </div>
 
-    <!-- מודל מחשבון משנה -->
     <div id="subCalcModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4"><div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-pop"><div class="p-4 bg-blue-600 text-white flex justify-between items-center"><h3 class="font-bold flex items-center gap-2"><i class="fas fa-calculator"></i> מחשבון <span id="modalTitleSuffix"></span></h3><button onclick="closeSubCalc()" class="text-white hover:text-blue-200"><i class="fas fa-times"></i></button></div><div class="p-4 space-y-3 max-h-[50vh] overflow-y-auto" id="modalRows"></div><div class="p-4 bg-slate-50 dark:bg-slate-800 space-y-3 border-t"><div class="flex justify-between text-xs font-bold"><span>משקל מתוך הקורס:</span><span id="modalTotalWeight" class="text-orange-500">0%</span></div><div class="flex justify-between text-lg font-black"><span>ציון משוקלל:</span><span id="modalFinalGrade" class="text-blue-600">0</span></div><div class="grid grid-cols-2 gap-3 mt-4"><button onclick="addSubCalcRow()" class="py-2 border border-blue-600 text-blue-600 rounded-xl font-bold text-xs hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">הוסף מטלה</button><button onclick="applySubCalc()" class="py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition">עדכן נתונים</button></div></div></div></div>
 
-    <!-- מודל תואר כפול (רכיבים) -->
     <div id="componentsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center modal-overlay p-4">
         <div class="bg-white dark:bg-dark-card w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-pop">
             <div class="p-4 bg-slate-700 text-white flex justify-between items-center">
@@ -484,9 +480,7 @@
             else rawFinal = (((w * wp) + (q * qp) + (ex * ew)) / tw);
             rawFinal = Math.min(100, rawFinal);
 
-            const integerPart = Math.floor(rawFinal);
-            const decimalPart = rawFinal - integerPart;
-            return (decimalPart > 0.5) ? integerPart + 1 : integerPart;
+            return Math.round(rawFinal);
         }
 
         function calculateAll() {
